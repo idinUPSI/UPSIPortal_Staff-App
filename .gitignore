@@ -1,0 +1,50 @@
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+android/gradle/
+android/local.properties
+android/.idea/
+android/*.iml
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+*.apk
+*.aab
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Capacitor
+.capacitor/
+android/app/src/main/assets/public/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Build outputs
+dist/
+build/
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store

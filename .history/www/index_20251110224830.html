@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1976D2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Sistem Idin - UPSI</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            background-color: #1976D2;
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .splash-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .splash-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* App Container */
+        #app-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        #app-container.visible {
+            display: flex;
+        }
+
+        /* Header Bar - Native look */
+        #app-header {
+            background: #1976D2;
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 56px;
+        }
+
+        #app-header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .header-btn:active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* WebView Container */
+        #webview-container {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+
+        #webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.3s;
+        }
+
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top-color: #1976D2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Error Message */
+        #error-message {
+            display: none;
+            padding: 16px;
+            background: #f44336;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #error-message.visible {
+            display: block;
+        }
+
+        /* Connection Status */
+        .offline-banner {
+            background: #FF9800;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+        .offline-banner.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo">UPSI</div>
+        <div class="splash-title">Sistem Idin</div>
+        <div class="splash-subtitle">Portal Universiti</div>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container">
+        <!-- Offline Banner -->
+        <div id="offline-banner" class="offline-banner">
+            Tiada sambungan internet
+        </div>
+
+        <!-- App Header -->
+        <div id="app-header">
+            <h1>Sistem Idin</h1>
+            <button class="header-btn" id="refresh-btn">↻</button>
+            <button class="header-btn" id="home-btn">⌂</button>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message"></div>
+
+        <!-- WebView Container -->
+        <div id="webview-container">
+            <div id="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+            <iframe id="webview" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <!-- Capacitor Core -->
+    <script src="cordova.js"></script>
+
+    <!-- App Script -->
+    <script>
+        // Configuration
+        const CONFIG = {
+            websiteUrl: 'https://unistaff.upsi.edu.my',
+            splashDuration: 2000 // 2 seconds
+        };
+
+        // DOM Elements
+        const splashScreen = document.getElementById('splash-screen');
+        const appContainer = document.getElementById('app-container');
+        const webview = document.getElementById('webview');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const errorMessage = document.getElementById('error-message');
+        const offlineBanner = document.getElementById('offline-banner');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const homeBtn = document.getElementById('home-btn');
+
+        // App State
+        let isOnline = navigator.onLine;
+        let capacitorReady = false;
+
+        // Initialize App
+        function initializeApp() {
+            console.log('Initializing Sistem Idin App...');
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Check network status
+            updateNetworkStatus();
+            
+            // Hide splash and show app
+            setTimeout(() => {
+                hideSplash();
+                loadWebsite();
+            }, CONFIG.splashDuration);
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Refresh button
+            refreshBtn.addEventListener('click', () => {
+                loadWebsite();
+            });
+
+            // Home button
+            homeBtn.addEventListener('click', () => {
+                webview.src = CONFIG.websiteUrl;
+            });
+
+            // Network status
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateNetworkStatus();
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateNetworkStatus();
+            });
+
+            // WebView load events
+            webview.addEventListener('load', () => {
+                hideLoading();
+            });
+
+            webview.addEventListener('error', (e) => {
+                showError('Gagal memuatkan halaman. Sila semak sambungan internet anda.');
+            });
+
+            // Capacitor device ready
+            document.addEventListener('deviceready', () => {
+                console.log('Capacitor device ready');
+                capacitorReady = true;
+                initializeCapacitorPlugins();
+            }, false);
+        }
+
+        // Initialize Capacitor Plugins
+        function initializeCapacitorPlugins() {
+            // Status Bar plugin
+            if (window.Capacitor && window.Capacitor.Plugins.StatusBar) {
+                const { StatusBar } = window.Capacitor.Plugins;
+                StatusBar.setBackgroundColor({ color: '#1976D2' });
+                StatusBar.setStyle({ style: 'DARK' });
+            }
+
+            // Splash Screen plugin
+            if (window.Capacitor && window.Capacitor.Plugins.SplashScreen) {
+                const { SplashScreen } = window.Capacitor.Plugins;
+                SplashScreen.hide();
+            }
+
+            // Push Notifications (will be configured later)
+            if (window.Capacitor && window.Capacitor.Plugins.PushNotifications) {
+                setupPushNotifications();
+            }
+
+            console.log('Capacitor plugins initialized');
+        }
+
+        // Setup Push Notifications
+        function setupPushNotifications() {
+            const { PushNotifications } = window.Capacitor.Plugins;
+
+            // Request permission
+            PushNotifications.requestPermissions().then(result => {
+                if (result.receive === 'granted') {
+                    PushNotifications.register();
+                }
+            });
+
+            // Handle registration
+            PushNotifications.addListener('registration', (token) => {
+                console.log('Push registration success, token: ' + token.value);
+                // Send token to your server
+            });
+
+            // Handle errors
+            PushNotifications.addListener('registrationError', (error) => {
+                console.error('Push registration error: ', error);
+            });
+
+            // Handle push notifications
+            PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                console.log('Push notification received: ', notification);
+                // Show notification to user
+            });
+
+            PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+                console.log('Push notification action performed', notification);
+                // Handle notification tap
+            });
+        }
+
+        // Hide Splash Screen
+        function hideSplash() {
+            splashScreen.classList.add('hidden');
+            appContainer.classList.add('visible');
+            
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+            }, 500);
+        }
+
+        // Load Website
+        function loadWebsite() {
+            if (!isOnline) {
+                showError('Tiada sambungan internet. Sila sambung ke internet untuk menggunakan aplikasi ini.');
+                return;
+            }
+
+            showLoading();
+            hideError();
+            webview.src = CONFIG.websiteUrl;
+        }
+
+        // Show/Hide Loading
+        function showLoading() {
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // Show/Hide Error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+            hideLoading();
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('visible');
+        }
+
+        // Update Network Status
+        function updateNetworkStatus() {
+            if (isOnline) {
+                offlineBanner.classList.remove('visible');
+            } else {
+                offlineBanner.classList.add('visible');
+            }
+        }
+
+        // Handle back button (Android)
+        document.addEventListener('backbutton', (e) => {
+            e.preventDefault();
+            
+            // Try to go back in webview history
+            if (webview.contentWindow && webview.contentWindow.history.length > 1) {
+                webview.contentWindow.history.back();
+            }
+        }, false);
+
+        // Start the app
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>

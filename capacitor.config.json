@@ -1,0 +1,10 @@
+{
+  "appId": "com.idin.system",
+  "appName": "Sistem Idin",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://unistaff.upsi.edu.my",
+    "cleartext": false
+  }
+}
