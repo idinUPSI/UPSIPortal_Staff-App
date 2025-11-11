@@ -147,10 +147,13 @@ public class MainActivity extends BridgeActivity {
                 statusBarHeight = getResources().getDimensionPixelSize(resourceId);
             }
             
+            // Make final for use in lambda
+            final int finalStatusBarHeight = statusBarHeight;
+            
             // Inject CSS with multiple strategies to ensure it works
             String javascript = 
                 "(function() {" +
-                "  var statusBarHeight = " + statusBarHeight + ";" +
+                "  var statusBarHeight = " + finalStatusBarHeight + ";" +
                 "  " +
                 "  // Remove any existing injected styles" +
                 "  var oldStyle = document.getElementById('statusbar-padding-fix');" +
@@ -161,11 +164,11 @@ public class MainActivity extends BridgeActivity {
                 "  style.id = 'statusbar-padding-fix';" +
                 "  style.innerHTML = '" +
                 "    * { " +
-                "      --status-bar-height: " + statusBarHeight + "px; " +
+                "      --status-bar-height: " + finalStatusBarHeight + "px; " +
                 "    }" +
                 "    html { " +
-                "      padding-top: " + statusBarHeight + "px !important; " +
-                "      height: calc(100% - " + statusBarHeight + "px) !important; " +
+                "      padding-top: " + finalStatusBarHeight + "px !important; " +
+                "      height: calc(100% - " + finalStatusBarHeight + "px) !important; " +
                 "      box-sizing: border-box !important; " +
                 "    }" +
                 "    body { " +
@@ -192,7 +195,7 @@ public class MainActivity extends BridgeActivity {
                 "})();";
             
             webView.evaluateJavascript(javascript, result -> {
-                android.util.Log.i("MainActivity", "Status bar padding injection result: " + result + " (" + statusBarHeight + "px)");
+                android.util.Log.i("MainActivity", "Status bar padding injection result: " + result + " (" + finalStatusBarHeight + "px)");
             });
             
         } catch (Exception e) {
