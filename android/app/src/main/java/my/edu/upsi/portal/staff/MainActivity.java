@@ -46,7 +46,7 @@ public class MainActivity extends BridgeActivity {
         // Enable edge-to-edge but with proper insets
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Android 11+
-            WindowCompat.setDecorFitsSystemWindows(window, false);
+            WindowCompat.setDecorFitsSystemWindows(window, true); // TRUE = content stays below status bar
             window.setStatusBarColor(Color.parseColor("#663399"));
             
             // Set status bar icons to light (white)
@@ -57,10 +57,6 @@ public class MainActivity extends BridgeActivity {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android 6-10
             window.setStatusBarColor(Color.parseColor("#663399"));
-            
-            // Light status bar (dark icons)
-            View decorView = window.getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         } else {
             // Android 5
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -260,3 +256,4 @@ public class MainActivity extends BridgeActivity {
         }
     }
 }
+

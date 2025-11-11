@@ -3595,7 +3595,7 @@ APK building sekarang. Ini **MESTI berfungsi** kerana kita catch semua main fram
 
 ---
 
-_**User (2025-11-11 08:06Z)**_
+_**User (2025-11-11 08:09Z)**_
 
 ia berhasil untuk paparan tiada internet? kenapa tidak buat dari awal? 
 
@@ -3613,7 +3613,49 @@ Untuk soalan anda:
 
 Saya minta maaf. Masalahnya:
 - Awal-awal saya cuba **filter error types** (check error code -2, ERROR_CONNECT, dll) - tapi error codes **tidak konsisten** across Android versions
-- Sekarang approach simple: 
+- Sekarang approach simple: **ANY main frame error = show offline page** - ini lebih reliable
+
+**Lesson learned:** Sometimes **AGGRESSIVE & SIMPLE** beats **PRECISE & COMPLEX** 
+
+---
+
+## 2️⃣ App bertindih dengan notification bar/status bar
+
+Ini masalah **window insets** dan **status bar**. Capacitor default tak handle status bar padding dengan betul. Mari saya fix: 
+```
+
+```
+Sekarang tambah kod dalam MainActivity untuk set status bar dengan betul: 
+```
+
+```
+
+```
+
+```
+Status bar fix committed and pushed! GitHub Actions will build the APK automatically.
+
+**Cuba download APK dari GitHub Actions dan test:**
+
+1. Status bar tak overlap dengan app content lagi
+2. Offline page masih berfungsi dengan baik
+3. Splash screen muncul seperti biasa
+
+Kalau masih ada issue dengan spacing atau status bar, beritahu saya. Saya dah handle Android API 5-11+ dalam kod ni.
+
+---
+
+_**User (2025-11-11 08:16Z)**_
+
+anda faham kan maksud saya, di atas , paparan app ini telah memasuki kawasan top header defauilt phone yang saya hinglight kan warna kuning itu. 
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Ya, saya faham! Status bar (bahagian atas dengan waktu 4:12, ikon network, bateri) masih overlap dengan content app. "Welcome!" text masuk ke dalam kawasan status bar yang anda highlight warna kuning tu.
+
+Biar saya adjust dengan cara 
 
 ---
 
