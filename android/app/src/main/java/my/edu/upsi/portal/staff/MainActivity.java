@@ -50,39 +50,47 @@ public class MainActivity extends BridgeActivity {
         setupStatusBar();
     }
 
-        // Inject CSS to add padding for status bar on web content
+        // Inject / update CSS to add padding for status bar and required header spacings
         private void injectStatusBarPaddingCSS(WebView webView) {
-            // Get status bar height
-            int statusBarHeight = 0;
+            int statusBarHeightPx = 0;
             int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
             if (resourceId > 0) {
-                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+                statusBarHeightPx = getResources().getDimensionPixelSize(resourceId);
             }
-
-            // Convert to dp for CSS
             float scale = getResources().getDisplayMetrics().density;
-            int statusBarHeightDp = (int) (statusBarHeight / scale);
+            int statusBarHeightDp = (int) (statusBarHeightPx / scale);
 
-            // JavaScript to inject CSS
-            String js = "(function() {" +
-                    "if (!document.getElementById('status-bar-padding-fix')) {" +
-                    "  var style = document.createElement('style');" +
-                    "  style.id = 'status-bar-padding-fix';" +
-                    "  style.innerHTML = `" +
-                    "    html, body { " +
-                    "      padding-top: " + statusBarHeightDp + "px !important; " +
-                    "      margin-top: 0 !important; " +
-                    "    } " +
-                    "    .page-header, .navbar, .header, [class*='header'] { " +
-                    "      padding-top: calc(3rem + " + statusBarHeightDp + "px) !important; " +
-                    "      margin-top: 0 !important; " +
-                    "    }" +
-                    "  `;" +
-                    "  document.head.appendChild(style);" +
-                    "  console.log('Status bar padding injected: " + statusBarHeightDp + "px');" +
+            // Base paddings requested by user
+            int headerTopBase = 40; // px
+            int headerBottomBase = 10; // px
+            int pageHeaderTopBase = 30; // px
+
+            // Compose dynamic top paddings including status bar height (dp)
+            String headerTopCalc = "calc(" + headerTopBase + "px + " + statusBarHeightDp + "px)";
+            String pageHeaderTopCalc = "calc(" + pageHeaderTopBase + "px + " + statusBarHeightDp + "px)";
+
+            String js = "(function(){" +
+                    "var existing = document.getElementById('status-bar-padding-fix');" +
+                    "var css = `" +
+                    "html, body {padding-top: " + statusBarHeightDp + "px !important; margin:0 !important;}" +
+                    "header, .header, .site-header, [class*='header'] {" +
+                    "  padding: " + headerTopCalc + " 0 " + headerBottomBase + "px 0 !important;" +
+                    "  margin-top:0 !important;" +
                     "}" +
+                    ".page-header {" +
+                    "  padding-top: " + pageHeaderTopCalc + " !important;" +
+                    "  height:auto !important;" +
+                    "  margin-top:0 !important;" +
+                    "}" +
+                    "@supports (padding: max(0px)) {" +
+                    "  html, body {padding-top: max(env(safe-area-inset-top), " + statusBarHeightDp + "px) !important;}" +
+                    "}" +
+                    "`;" +
+                    "if(!existing){" +
+                    "  existing = document.createElement('style'); existing.id='status-bar-padding-fix'; document.head.appendChild(existing);" +
+                    "} existing.innerHTML = css;" +
+                    "console.log('[UPSI] Status bar & header padding applied (statusBarDp=" + statusBarHeightDp + ")');" +
                     "})();";
-
             webView.evaluateJavascript(js, null);
         }
     
