@@ -9,19 +9,34 @@
         const style = document.createElement('style');
         style.id = 'upsi-mobile-css';
         style.textContent = `
+            /* PWA Safe Area Handling */
+            :root {
+                --safe-area-inset-top: env(safe-area-inset-top, 20px);
+                --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+            }
+            
+            html, body {
+                padding-top: var(--safe-area-inset-top) !important;
+                padding-bottom: var(--safe-area-inset-bottom) !important;
+                margin-top: 0 !important;
+            }
+            
             .page-header {
                 height: auto !important;
-                padding-top: 3rem !important;
+                padding-top: calc(3rem + var(--safe-area-inset-top)) !important;
+                margin-top: 0 !important;
             }
             
-            /* Additional mobile optimizations */
-            body {
-                padding-top: env(safe-area-inset-top) !important;
+            /* Prevent content from going under status bar */
+            .container, .container-fluid {
+                padding-top: var(--safe-area-inset-top) !important;
+                padding-left: env(safe-area-inset-left, 1rem) !important;
+                padding-right: env(safe-area-inset-right, 1rem) !important;
             }
             
-            .container-fluid {
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
+            /* Fix for overlapping content */
+            .main-content, .content, #content {
+                margin-top: var(--safe-area-inset-top) !important;
             }
         `;
         
