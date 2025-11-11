@@ -238,14 +238,27 @@ public class MainActivity extends BridgeActivity {
     
     private boolean isNetworkAvailable() {
         if (connectivityManager == null) return false;
-        
-        Network network = connectivityManager.getActiveNetwork();
-        if (network == null) return false;
-        
-        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-        return capabilities != null && 
-               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network network = connectivityManager.getActiveNetwork();
+            if (network == null) return false;
+
+            NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(network);
+            if (caps == null) return false;
+
+            // Be lenient: consider network available if it has INTERNET capability
+            if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                return true;
+            }
+
+            // Fallback: check common transports
+            return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+        } else {
+            android.net.NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+            return info != null && info.isConnected();
+        }
     }
 
     @Override
