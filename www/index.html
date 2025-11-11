@@ -27,7 +27,7 @@
             width: 120px;
             height: 120px;
             background: white;
-            border-radius: 24px;
+            border-radius: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -36,6 +36,7 @@
             font-size: 48px;
             font-weight: bold;
             color: #663399;
+            overflow: hidden;
         }
 
         h1 {
@@ -92,7 +93,9 @@
     </style>
 </head>
 <body>
-    <div class="logo">UPSI</div>
+    <div class="logo">
+        <img src="assets/images/universiti-pendidikan-sultan-idris-small.png" alt="UPSI Logo" style="width:100px;height:100px;object-fit:contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI';">
+    </div>
     <h1>MyUPSI Portal Staff</h1>
     <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
     <div class="spinner"></div>
