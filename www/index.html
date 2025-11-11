@@ -178,6 +178,10 @@
                 } else {
                     console.warn('Capacitor not available');
                     document.getElementById('status').textContent = 'Mod web - menyambung...';
+                    // Redirect immediately in web mode
+                    setTimeout(() => {
+                        window.location.href = 'https://unistaff.upsi.edu.my';
+                    }, 2000);
                 }
             } catch (error) {
                 console.error('Error initializing Capacitor:', error);
@@ -237,9 +241,14 @@
             });
         }
 
+        // Redirect to portal after initialization
+        setTimeout(() => {
+            window.location.href = 'https://unistaff.upsi.edu.my';
+        }, 3000);
+
         // Log app start
         console.log('MyUPSI Portal Staff - Starting...');
-        console.log('Capacitor will load URL from config');
+        console.log('Capacitor initialized, will redirect to portal');pacitor will load URL from config');
     </script>
 </body>
 </html>

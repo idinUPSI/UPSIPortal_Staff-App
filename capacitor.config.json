@@ -3,10 +3,7 @@
   "appName": "MyUPSI Portal Staff",
   "webDir": "www",
   "bundledWebRuntime": false,
-  "server": {
-    "url": "https://unistaff.upsi.edu.my",
-    "cleartext": false
-  },
+
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
