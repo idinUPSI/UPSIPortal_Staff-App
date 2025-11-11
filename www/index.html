@@ -107,7 +107,7 @@
 </head>
 <body>
     <div class="logo">
-        <img src="assets/images/upsi-logo.png" alt="UPSI Logo" onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI'">
+        <img src="assets/images/upsi-logo.png" alt="UPSI Logo" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\"font-size:48px;font-weight:bold;color:#663399\">UPSI</div>'">
     </div>
     <h1>MyUPSI Portal Staff</h1>
     <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
@@ -178,10 +178,6 @@
                 } else {
                     console.warn('Capacitor not available');
                     document.getElementById('status').textContent = 'Mod web - menyambung...';
-                    // Redirect immediately in web mode
-                    setTimeout(() => {
-                        window.location.href = 'https://unistaff.upsi.edu.my';
-                    }, 2000);
                 }
             } catch (error) {
                 console.error('Error initializing Capacitor:', error);
@@ -228,6 +224,14 @@
             showError('Ralat sambungan');
         });
 
+        // Check if logo loaded, show fallback if not
+        setTimeout(() => {
+            const img = document.querySelector('.logo img');
+            if (img && (img.naturalWidth === 0 || img.complete === false)) {
+                img.onerror();
+            }
+        }, 1000);
+
         // Register service worker for offline support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
@@ -241,7 +245,7 @@
             });
         }
 
-        // Redirect to portal after initialization
+        // Always redirect after 3 seconds
         setTimeout(() => {
             window.location.href = 'https://unistaff.upsi.edu.my';
         }, 3000);
