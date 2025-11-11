@@ -1,4 +1,4 @@
-package com.upsi.portal.staff;
+package my.edu.upsi.portal.staff;
 
 import com.getcapacitor.BridgeActivity;
 
