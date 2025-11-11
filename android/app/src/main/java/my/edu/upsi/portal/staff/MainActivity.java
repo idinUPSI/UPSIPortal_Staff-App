@@ -352,7 +352,6 @@ public class MainActivity extends BridgeActivity {
                     // Performance settings
                     settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
                     settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-                    settings.setAppCacheEnabled(true);
                     settings.setDatabaseEnabled(true);
                     settings.setGeolocationEnabled(true);
 
