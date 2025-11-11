@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#663399">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>MyUPSI Portal Staff - UPSI</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>MyUPSI Portal Staff</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * {
@@ -16,33 +16,17 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            overflow: hidden;
-            background-color: #663399;
-        }
-
-        /* Splash Screen */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #663399 0%, #4D2677 100%);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease-out;
+            color: white;
         }
 
-        #splash-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .splash-logo {
+        .logo {
             width: 120px;
             height: 120px;
             background: white;
@@ -57,17 +41,18 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         }
 
-        .splash-title {
-            color: white;
+        h1 {
             font-size: 28px;
             font-weight: 600;
             margin-bottom: 8px;
+            text-align: center;
         }
 
-        .splash-subtitle {
-            color: rgba(255,255,255,0.9);
+        .subtitle {
             font-size: 16px;
+            opacity: 0.9;
             margin-bottom: 32px;
+            text-align: center;
         }
 
         .spinner {
@@ -83,363 +68,71 @@
             to { transform: rotate(360deg); }
         }
 
-        /* App Container */
-        #app-container {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            flex-direction: column;
-        }
-
-        #app-container.visible {
-            display: flex;
-        }
-
-        /* Header Bar - Native look */
-        #app-header {
-            background: #663399;
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-height: 56px;
-        }
-
-        #app-header h1 {
-            font-size: 20px;
-            font-weight: 500;
-            flex: 1;
-        }
-
-        .header-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
+        .status {
+            margin-top: 24px;
             font-size: 14px;
-            margin-left: 8px;
-        }
-
-        .header-btn:active {
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* WebView Container */
-        #webview-container {
-            flex: 1;
-            position: relative;
-            background: white;
-        }
-
-        #webview {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Loading Overlay */
-        #loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            transition: opacity 0.3s;
-        }
-
-        #loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top-color: #663399;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Error Message */
-        #error-message {
-            display: none;
-            padding: 16px;
-            background: #f44336;
-            color: white;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        #error-message.visible {
-            display: block;
-        }
-
-        /* Connection Status */
-        .offline-banner {
-            background: #FF9800;
-            color: white;
-            padding: 8px;
-            text-align: center;
-            font-size: 14px;
-            display: none;
-        }
-
-        .offline-banner.visible {
-            display: block;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
-    <!-- Splash Screen -->
-    <div id="splash-screen">
-        <div class="splash-logo">UPSI</div>
-        <div class="splash-title">MyUPSI Portal Staff</div>
-        <div class="splash-subtitle">Portal Universiti</div>
-        <div class="spinner"></div>
-    </div>
+    <div class="logo">UPSI</div>
+    <h1>MyUPSI Portal Staff</h1>
+    <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
+    <div class="spinner"></div>
+    <div class="status" id="status">Memuatkan...</div>
 
-    <!-- App Container -->
-    <div id="app-container">
-        <!-- Offline Banner -->
-        <div id="offline-banner" class="offline-banner">
-            Tiada sambungan internet
-        </div>
-
-        <!-- App Header -->
-        <div id="app-header">
-            <h1>MyUPSI Portal Staff</h1>
-            <button class="header-btn" id="refresh-btn">↻</button>
-            <button class="header-btn" id="home-btn">⌂</button>
-        </div>
-
-        <!-- Error Message -->
-        <div id="error-message"></div>
-
-        <!-- WebView Container -->
-        <div id="webview-container">
-            <div id="loading-overlay">
-                <div class="loading-spinner"></div>
-            </div>
-            <iframe id="webview" src="about:blank"></iframe>
-        </div>
-    </div>
-
-    <!-- Capacitor Core -->
+    <!-- Capacitor Core - Will handle loading the actual app -->
     <script src="cordova.js"></script>
 
-    <!-- App Script -->
     <script>
-        // Configuration
-        const CONFIG = {
-            websiteUrl: 'https://unistaff.upsi.edu.my',
-            splashDuration: 2000 // 2 seconds
-        };
+        // Simple initialization for Capacitor
+        // The actual app will be loaded from the server URL configured in capacitor.config.json
 
-        // DOM Elements
-        const splashScreen = document.getElementById('splash-screen');
-        const appContainer = document.getElementById('app-container');
-        const webview = document.getElementById('webview');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const errorMessage = document.getElementById('error-message');
-        const offlineBanner = document.getElementById('offline-banner');
-        const refreshBtn = document.getElementById('refresh-btn');
-        const homeBtn = document.getElementById('home-btn');
+        let startTime = Date.now();
 
-        // App State
-        let isOnline = navigator.onLine;
-        let capacitorReady = false;
+        document.addEventListener('deviceready', function() {
+            console.log('Capacitor ready');
+            document.getElementById('status').textContent = 'Menyambung ke portal...';
 
-        // Initialize App
-        function initializeApp() {
-            console.log('Initializing MyUPSI Portal Staff App...');
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Check network status
-            updateNetworkStatus();
-            
-            // Hide splash and show app
-            setTimeout(() => {
-                hideSplash();
-                loadWebsite();
-            }, CONFIG.splashDuration);
-        }
-
-        // Setup Event Listeners
-        function setupEventListeners() {
-            // Refresh button
-            refreshBtn.addEventListener('click', () => {
-                loadWebsite();
-            });
-
-            // Home button
-            homeBtn.addEventListener('click', () => {
-                webview.src = CONFIG.websiteUrl;
-            });
-
-            // Network status
-            window.addEventListener('online', () => {
-                isOnline = true;
-                updateNetworkStatus();
-            });
-
-            window.addEventListener('offline', () => {
-                isOnline = false;
-                updateNetworkStatus();
-            });
-
-            // WebView load events
-            webview.addEventListener('load', () => {
-                hideLoading();
-            });
-
-            webview.addEventListener('error', (e) => {
-                showError('Gagal memuatkan halaman. Sila semak sambungan internet anda.');
-            });
-
-            // Capacitor device ready
-            document.addEventListener('deviceready', () => {
-                console.log('Capacitor device ready');
-                capacitorReady = true;
-                initializeCapacitorPlugins();
-            }, false);
-        }
-
-        // Initialize Capacitor Plugins
-        function initializeCapacitorPlugins() {
-            // Status Bar plugin
-            if (window.Capacitor && window.Capacitor.Plugins.StatusBar) {
-                const { StatusBar } = window.Capacitor.Plugins;
-                StatusBar.setBackgroundColor({ color: '#663399' });
-                StatusBar.setStyle({ style: 'DARK' });
-            }
-
-            // Splash Screen plugin
-            if (window.Capacitor && window.Capacitor.Plugins.SplashScreen) {
-                const { SplashScreen } = window.Capacitor.Plugins;
-                SplashScreen.hide();
-            }
-
-            // Push Notifications (will be configured later)
-            if (window.Capacitor && window.Capacitor.Plugins.PushNotifications) {
-                setupPushNotifications();
-            }
-
-            console.log('Capacitor plugins initialized');
-        }
-
-        // Setup Push Notifications
-        function setupPushNotifications() {
-            const { PushNotifications } = window.Capacitor.Plugins;
-
-            // Request permission
-            PushNotifications.requestPermissions().then(result => {
-                if (result.receive === 'granted') {
-                    PushNotifications.register();
+            // Initialize Capacitor plugins
+            if (window.Capacitor) {
+                // Status Bar
+                if (window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+                    const { StatusBar } = window.Capacitor.Plugins;
+                    StatusBar.setBackgroundColor({ color: '#663399' }).catch(console.error);
+                    StatusBar.setStyle({ style: 'DARK' }).catch(console.error);
                 }
-            });
 
-            // Handle registration
-            PushNotifications.addListener('registration', (token) => {
-                console.log('Push registration success, token: ' + token.value);
-                // Send token to your server
-            });
+                // Hide splash screen after Capacitor is ready
+                if (window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+                    const { SplashScreen } = window.Capacitor.Plugins;
+                    // Ensure minimum display time of 2 seconds
+                    const elapsed = Date.now() - startTime;
+                    const delay = Math.max(0, 2000 - elapsed);
+                    setTimeout(() => {
+                        SplashScreen.hide().catch(console.error);
+                    }, delay);
+                }
 
-            // Handle errors
-            PushNotifications.addListener('registrationError', (error) => {
-                console.error('Push registration error: ', error);
-            });
+                // Network monitoring
+                if (window.Capacitor.Plugins && window.Capacitor.Plugins.Network) {
+                    const { Network } = window.Capacitor.Plugins;
+                    Network.getStatus().then(status => {
+                        console.log('Network status:', status);
+                        if (!status.connected) {
+                            document.getElementById('status').textContent = 'Tiada sambungan internet';
+                        }
+                    }).catch(console.error);
+                }
 
-            // Handle push notifications
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('Push notification received: ', notification);
-                // Show notification to user
-            });
-
-            PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-                console.log('Push notification action performed', notification);
-                // Handle notification tap
-            });
-        }
-
-        // Hide Splash Screen
-        function hideSplash() {
-            splashScreen.classList.add('hidden');
-            appContainer.classList.add('visible');
-            
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-            }, 500);
-        }
-
-        // Load Website
-        function loadWebsite() {
-            if (!isOnline) {
-                showError('Tiada sambungan internet. Sila sambung ke internet untuk menggunakan aplikasi ini.');
-                return;
-            }
-
-            showLoading();
-            hideError();
-            webview.src = CONFIG.websiteUrl;
-        }
-
-        // Show/Hide Loading
-        function showLoading() {
-            loadingOverlay.classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            loadingOverlay.classList.add('hidden');
-        }
-
-        // Show/Hide Error
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.add('visible');
-            hideLoading();
-        }
-
-        function hideError() {
-            errorMessage.classList.remove('visible');
-        }
-
-        // Update Network Status
-        function updateNetworkStatus() {
-            if (isOnline) {
-                offlineBanner.classList.remove('visible');
-            } else {
-                offlineBanner.classList.add('visible');
-            }
-        }
-
-        // Handle back button (Android)
-        document.addEventListener('backbutton', (e) => {
-            e.preventDefault();
-            
-            // Try to go back in webview history
-            if (webview.contentWindow && webview.contentWindow.history.length > 1) {
-                webview.contentWindow.history.back();
+                console.log('Capacitor plugins initialized');
             }
         }, false);
 
-        // Start the app
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeApp);
-        } else {
-            initializeApp();
-        }
+        // Log app start
+        console.log('MyUPSI Portal Staff - Starting...');
+        console.log('Capacitor will load URL from config');
     </script>
 </body>
 </html>

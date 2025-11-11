@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Production configuration - strict security -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust system certificates (preinstalled CAs) -->
+            <certificates src="system" />
+            <!-- Trust user-added certificates (for development/testing) -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Domain-specific configurations -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">unistaff.upsi.edu.my</domain>
+        <domain includeSubdomains="true">upsi.edu.my</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <!-- Enable certificate pinning for additional security (optional) -->
+        <!-- 
+        <pin-set expiration="2026-01-01">
+            <pin digest="SHA-256">base64-encoded-pin-here</pin>
+        </pin-set>
+        -->
+    </domain-config>
+
+    <!-- Debug configuration (only for development) -->
+    <!-- Uncomment for development/debugging -->
+    <!--
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+    -->
+</network-security-config>

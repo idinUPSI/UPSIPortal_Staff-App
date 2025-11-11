@@ -8,21 +8,28 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -31,11 +38,14 @@ public class MainActivity extends BridgeActivity {
     private ConnectivityManager.NetworkCallback networkCallback;
     private static final String HOME_URL = "https://unistaff.upsi.edu.my";
     private boolean isShowingOfflinePage = false;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private long lastBackPressTime = 0;
+    private static final int BACK_PRESS_INTERVAL = 2000; // 2 seconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Fix status bar overlap
         setupStatusBar();
     }
@@ -70,6 +80,8 @@ public class MainActivity extends BridgeActivity {
         requestNotificationPermissionIfNeeded();
         setupNetworkMonitoring();
         setupOfflineErrorHandler();
+        setupPullToRefresh();
+        setupWebViewSettings();
     }
 
     private void setupOfflineErrorHandler() {
@@ -92,7 +104,7 @@ public class MainActivity extends BridgeActivity {
                                 runOnUiThread(() -> {
                                     isShowingOfflinePage = true;
                                     loadOfflinePage(view);
-                                    
+
                                     // Debug: show error details
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                         String errorMsg = "Error: " + error.getErrorCode() + " - " + error.getDescription();
@@ -106,11 +118,34 @@ public class MainActivity extends BridgeActivity {
                         }
 
                         @Override
+                        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                            // Log SSL error for debugging
+                            android.util.Log.e("MainActivity", "SSL Error: " + error.toString());
+
+                            // For production, reject SSL errors for security
+                            // For development/testing only, you can use: handler.proceed();
+                            handler.cancel();
+
+                            // Show error to user
+                            runOnUiThread(() -> {
+                                Toast.makeText(MainActivity.this,
+                                    "Ralat keselamatan SSL. Sila hubungi pentadbir sistem.",
+                                    Toast.LENGTH_LONG).show();
+                                isShowingOfflinePage = true;
+                                loadOfflinePage(view);
+                            });
+                        }
+
+                        @Override
                         public void onPageStarted(WebView view, String url, Bitmap favicon) {
                             super.onPageStarted(view, url, favicon);
                             // Only reset flag if loading a real URL (not our offline page)
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
+                            }
+                            // Hide pull-to-refresh indicator if showing
+                            if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                                swipeRefreshLayout.setRefreshing(false);
                             }
                         }
 
@@ -120,6 +155,10 @@ public class MainActivity extends BridgeActivity {
                             // Successfully loaded a real page
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
+                            }
+                            // Hide pull-to-refresh indicator
+                            if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                                swipeRefreshLayout.setRefreshing(false);
                             }
                         }
                     });
@@ -254,6 +293,148 @@ public class MainActivity extends BridgeActivity {
                 }
             });
         }
+    }
+
+    // Setup Pull-to-Refresh functionality
+    private void setupPullToRefresh() {
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    WebView webView = getBridge().getWebView();
+
+                    // Find SwipeRefreshLayout in the view hierarchy
+                    android.view.ViewParent parent = webView.getParent();
+                    while (parent != null && !(parent instanceof SwipeRefreshLayout)) {
+                        parent = parent.getParent();
+                    }
+
+                    if (parent instanceof SwipeRefreshLayout) {
+                        swipeRefreshLayout = (SwipeRefreshLayout) parent;
+
+                        // Configure pull-to-refresh
+                        swipeRefreshLayout.setColorSchemeColors(
+                            Color.parseColor("#663399"),
+                            Color.parseColor("#9575cd"),
+                            Color.parseColor("#4D2677")
+                        );
+
+                        swipeRefreshLayout.setOnRefreshListener(() -> {
+                            if (isNetworkAvailable()) {
+                                if (!isShowingOfflinePage) {
+                                    webView.reload();
+                                } else {
+                                    isShowingOfflinePage = false;
+                                    webView.loadUrl(HOME_URL);
+                                }
+                            } else {
+                                Toast.makeText(MainActivity.this,
+                                    "Tiada sambungan internet",
+                                    Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error setting up pull-to-refresh: " + e.getMessage());
+            }
+        }, 1500);
+    }
+
+    // Setup WebView Settings for better performance and security
+    private void setupWebViewSettings() {
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    WebView webView = getBridge().getWebView();
+                    WebSettings settings = webView.getSettings();
+
+                    // Performance settings
+                    settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+                    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                    settings.setAppCacheEnabled(true);
+                    settings.setDatabaseEnabled(true);
+                    settings.setGeolocationEnabled(true);
+
+                    // Enable zooming
+                    settings.setSupportZoom(true);
+                    settings.setBuiltInZoomControls(true);
+                    settings.setDisplayZoomControls(false);
+
+                    // Better text rendering
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+                    }
+
+                    // Mixed content mode (allow HTTPS pages to load HTTP resources if needed)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+                    }
+
+                    // File access
+                    settings.setAllowFileAccess(true);
+                    settings.setAllowContentAccess(true);
+
+                    // Enable wide viewport
+                    settings.setUseWideViewPort(true);
+                    settings.setLoadWithOverviewMode(true);
+
+                    android.util.Log.i("MainActivity", "WebView settings optimized");
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error setting up WebView: " + e.getMessage());
+            }
+        }, 1500);
+    }
+
+    // Handle back button press
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    WebView webView = getBridge().getWebView();
+
+                    // If showing offline page, try to go back or exit
+                    if (isShowingOfflinePage) {
+                        if (webView.canGoBack()) {
+                            isShowingOfflinePage = false;
+                            webView.goBack();
+                            return true;
+                        } else {
+                            // Double press to exit
+                            if (System.currentTimeMillis() - lastBackPressTime < BACK_PRESS_INTERVAL) {
+                                finishAffinity(); // Exit app
+                                return true;
+                            } else {
+                                lastBackPressTime = System.currentTimeMillis();
+                                Toast.makeText(this, "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                        }
+                    }
+
+                    // If WebView can go back, go back
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                        return true;
+                    } else {
+                        // At home page, double press to exit
+                        if (System.currentTimeMillis() - lastBackPressTime < BACK_PRESS_INTERVAL) {
+                            finishAffinity(); // Exit app
+                            return true;
+                        } else {
+                            lastBackPressTime = System.currentTimeMillis();
+                            Toast.makeText(this, "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error handling back button: " + e.getMessage());
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }
 
