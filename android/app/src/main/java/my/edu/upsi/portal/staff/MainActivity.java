@@ -46,35 +46,8 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Fix status bar overlap - MUST be called before any view is created
+        // Fix status bar overlap
         setupStatusBar();
-        
-        // Apply padding to bridge WebView container
-        applyWebViewContainerPadding();
-    }
-    
-    private void applyWebViewContainerPadding() {
-        // Calculate status bar height
-        int statusBarHeight = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-        }
-        
-        final int padding = statusBarHeight;
-        
-        // Apply padding to root view after a short delay
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            try {
-                View rootView = findViewById(android.R.id.content);
-                if (rootView != null) {
-                    rootView.setPadding(0, padding, 0, 0);
-                    android.util.Log.i("MainActivity", "Applied padding to root view: " + padding + "px");
-                }
-            } catch (Exception e) {
-                android.util.Log.e("MainActivity", "Error applying root padding: " + e.getMessage());
-            }
-        }, 100);
     }
     
     private void setupStatusBar() {
@@ -122,6 +95,7 @@ public class MainActivity extends BridgeActivity {
         setupOfflineErrorHandler();
         setupPullToRefresh();
         setupWebViewSettings();
+<<<<<<< HEAD
         injectStatusBarPadding();
     }
     
@@ -166,87 +140,8 @@ public class MainActivity extends BridgeActivity {
                 "    * { " +
                 "      --status-bar-height: " + finalStatusBarHeight + "px; " +
                 "    }" +
-                "    html { " +
-                "      padding-top: " + finalStatusBarHeight + "px !important; " +
-                "      height: calc(100% - " + finalStatusBarHeight + "px) !important; " +
-                "      box-sizing: border-box !important; " +
-                "    }" +
-                "    body { " +
-                "      margin-top: 0 !important; " +
-                "      position: relative !important; " +
-                "    }" +
-                "    body::before { " +
-                "      content: \\\"\\\" !important; " +
-                "      display: block !important; " +
-                "      height: 0 !important; " +
-                "      margin: 0 !important; " +
-                "    }" +
-                "  ';" +
-                "  " +
-                "  // Append to head or body" +
-                "  if (document.head) {" +
-                "    document.head.appendChild(style);" +
-                "  } else if (document.body) {" +
-                "    document.body.insertBefore(style, document.body.firstChild);" +
-                "  }" +
-                "  " +
-                "  console.log('[UPSI] Status bar padding injected: ' + statusBarHeight + 'px');" +
-                "  return true;" +
-                "})();";
-            
-            webView.evaluateJavascript(javascript, result -> {
-                android.util.Log.i("MainActivity", "Status bar padding injection result: " + result + " (" + finalStatusBarHeight + "px)");
-            });
-            
-        } catch (Exception e) {
-            android.util.Log.e("MainActivity", "Error in injectStatusBarPaddingDirect: " + e.getMessage());
-        }
-    }
-
-    private void setupOfflineErrorHandler() {
-        // Wait for WebView to be ready
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            try {
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    WebView webView = getBridge().getWebView();
-                    
-                    // Enable JavaScript for offline page
-                    webView.getSettings().setJavaScriptEnabled(true);
-                    webView.getSettings().setDomStorageEnabled(true);
-                    webView.addJavascriptInterface(new WebAppInterface(), "AndroidInterface");
-                    
-                    webView.setWebViewClient(new WebViewClient() {
-                        @Override
-                        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                            // ALWAYS handle main frame errors - prevent Android default error page
-                            if (request.isForMainFrame()) {
-                                runOnUiThread(() -> {
-                                    isShowingOfflinePage = true;
-                                    loadOfflinePage(view);
-
-                                    // Debug: show error details
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        String errorMsg = "Error: " + error.getErrorCode() + " - " + error.getDescription();
-                                        android.util.Log.e("MainActivity", errorMsg);
-                                    }
-                                });
-                                // Don't call super - we always show our custom page
-                                return;
-                            }
-                            super.onReceivedError(view, request, error);
-                        }
-
-                        @Override
-                        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                            // Log SSL error for debugging
-                            android.util.Log.e("MainActivity", "SSL Error: " + error.toString());
-
-                            // For production, reject SSL errors for security
-                            // For development/testing only, you can use: handler.proceed();
-                            handler.cancel();
-
+                }
                             // Show error to user
-                            runOnUiThread(() -> {
                                 Toast.makeText(MainActivity.this,
                                     "Ralat keselamatan SSL. Sila hubungi pentadbir sistem.",
                                     Toast.LENGTH_LONG).show();
@@ -274,8 +169,6 @@ public class MainActivity extends BridgeActivity {
                             // Successfully loaded a real page
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
-                                // Re-inject padding after page load
-                                injectStatusBarPaddingDirect(view);
                             }
                             // Hide pull-to-refresh indicator
                             if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
