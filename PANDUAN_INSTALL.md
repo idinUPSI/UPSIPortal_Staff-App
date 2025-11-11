@@ -1,20 +1,20 @@
-# 📱 Panduan Lengkap: Build Aplikasi Sistem Idin
+# 📱 Panduan Lengkap: Build Aplikasi MyUPSI Portal Staff
 
-Panduan step-by-step untuk membina aplikasi Android dari website UPSI.
+Panduan langkah demi langkah untuk membina aplikasi Android yang membungkus portal staf UPSI menggunakan Capacitor.
 
 ---
 
 ## 📋 Langkah 1: Install Software Yang Diperlukan
 
 ### A. Install Java Development Kit (JDK)
-1. Download **JDK 17** dari: https://adoptium.net/
+1. Download **JDK 21** (Temurin) dari: https://adoptium.net/ (versi LTS baharu yang disokong Gradle & Capacitor 7)
 2. Pilih "Latest LTS Release" → Windows → x64 → .msi installer
 3. Install dengan setting default (klik Next sahaja)
 4. Verify installation:
    ```powershell
    java -version
    ```
-   Sepatutnya keluar: `openjdk version "17.x.x"`
+   Sepatutnya keluar: `openjdk version "21.x.x"`
 
 ### B. Install Android Studio
 1. Download dari: https://developer.android.com/studio
@@ -37,7 +37,7 @@ Panduan step-by-step untuk membina aplikasi Android dari website UPSI.
 
 ### C. Install Node.js
 1. Download dari: https://nodejs.org/
-2. Pilih versi LTS (contoh: 20.x.x)
+2. Pilih versi LTS (20.x.x)
 3. Install dengan setting default
 4. Verify:
    ```powershell
@@ -63,22 +63,19 @@ Panduan step-by-step untuk membina aplikasi Android dari website UPSI.
 
 ---
 
-## 📦 Langkah 2: Install Dependencies Aplikasi
+## 📦 Langkah 2: Pasang Dependencies Aplikasi
 
 Buka PowerShell dalam folder projek ini dan run:
 
 ```powershell
 # Install dependencies
-npm install
+npm ci
 
 # Sync projek dengan Android
 npm run build
 ```
 
-**Nota**: Kalau ada error, cuba:
-```powershell
-npm install --legacy-peer-deps
-```
+**Nota**: `npm ci` memastikan pemasangan konsisten berdasarkan `package-lock.json`.
 
 ---
 
@@ -110,7 +107,7 @@ npm install --legacy-peer-deps
 8. Pilih device (emulator atau phone)
 9. Tunggu build dan app akan auto-install & run
 
-### Pilihan B: Build APK File Untuk Install Manual
+### Pilihan B: Build APK Debug Untuk Pasang Manual
 
 ```powershell
 # Navigate ke folder android
@@ -126,7 +123,7 @@ Install APK:
 - Transfer file ke phone
 - Buka file dan install (allow "Unknown sources" kalau perlu)
 
-### Pilihan C: Build Release APK (Untuk production)
+### Pilihan C: Build Release APK (Untuk produksi)
 
 ```powershell
 cd android
@@ -137,19 +134,20 @@ cd android
 
 ---
 
-## 🧪 Langkah 4: Test Aplikasi
+## 🧪 Langkah 4: Uji Aplikasi
 
 Apabila app running:
 
 ### Features Yang Patut Test:
-- ✅ Splash screen muncul 2 saat
-- ✅ Website UPSI load dalam app
-- ✅ Navigation dalam website berfungsi
-- ✅ Butang refresh dan home berfungsi
-- ✅ Status bar warna biru
-- ✅ Connection status (cuba matikan WiFi)
-- ✅ Back button navigate dalam website
-- ✅ Notifications (perlu setup server-side)
+Senarai semak:
+- ✅ Splash screen muncul
+- ✅ Portal UPSI dimuat
+- ✅ Navigasi dalam portal berfungsi
+- ✅ Butang refresh & home berfungsi
+- ✅ Status bar warna ungu (#663399)
+- ✅ Offline banner muncul bila tiada internet
+- ✅ Back button kembali dalam sejarah laman
+- ✅ Persediaan notifikasi (belum Firebase, akan diaktifkan kemudian)
 
 ### Common Issues:
 
@@ -168,7 +166,7 @@ Apabila app running:
 
 ---
 
-## 🔄 Langkah 5: Update Aplikasi (Untuk masa hadapan)
+## 🔄 Langkah 5: Kemas Kini Aplikasi (Masa Hadapan)
 
 Bila anda buat perubahan pada code:
 
@@ -185,30 +183,31 @@ cd android
 
 ## 🎨 Customization Guide
 
-### Tukar Warna Theme:
+### Tukar Warna Tema:
 Edit `\www\index.html`:
 ```css
-/* Line ~17 - Theme color */
-#1976D2  →  [warna baru]
+/* Meta theme-color & StatusBar */
+#663399  →  [warna baru]
 ```
 
-### Tukar Logo/Name:
-- Logo: Edit `.splash-logo` dalam index.html
-- Name: Edit `capacitor.config.json` → `appName`
+### Tukar Logo/Nama:
+- Logo: Edit `.splash-logo` dalam `www/index.html`
+- Nama paparan: Edit `capacitor.config.json` → `appName`
+- appId (JANGAN ubah selepas produksi kecuali perlu – perubahan memerlukan Firebase app baharu)
 
-### Tukar Icon:
-1. Buat icon PNG (512x512px)
-2. Guna tool: https://icon.kitchen/
-3. Download dan replace files dalam `android\app\src\main\res\mipmap-*`
+### Tukar Ikon:
+1. Sediakan icon PNG (1024x1024 asas / 512x512 minimum)
+2. Guna tool seperti https://icon.kitchen/ atau `npx @capacitor/assets generate`
+3. Ganti fail dalam `android\app\src\main\res\mipmap-*` & semak adaptive icon jika perlu
 
 ---
 
-## 📝 File Structure Penting
+## 📝 Struktur Fail Penting
 
 ```
 UPSIPortal-App/
 ├── www/
-│   └── index.html          ← Website/UI utama
+│   └── index.html          ← UI shell (WebView + splash + header)
 ├── android/
 │   └── app/
 │       └── src/main/
@@ -220,25 +219,25 @@ UPSIPortal-App/
 
 ---
 
-## 🆘 Troubleshooting
+## 🆘 Penyelesaian Masalah
 
-### Error: "SDK not found"
+### Ralat: "SDK not found"
 ```powershell
 # Set ANDROID_HOME
 $env:ANDROID_HOME = "C:\Users\[YourName]\AppData\Local\Android\Sdk"
 ```
 
-### Error: "Gradle build failed"
+### Ralat: "Gradle build failed"
 1. Buka Android Studio
 2. File → Invalidate Caches → Invalidate and Restart
 3. Build → Clean Project
 4. Build → Rebuild Project
 
-### Error: "Unable to locate adb"
+### Ralat: "Unable to locate adb"
 - Pastikan Android SDK platform-tools installed
 - Restart PowerShell after setting environment variables
 
-### App crashes immediately:
+### App crash sebaik dibuka:
 1. Check Logcat untuk error message
 2. Verify all permissions dalam AndroidManifest.xml
 3. Pastikan targetSdkVersion compatible
@@ -255,10 +254,10 @@ Kalau ada masalah:
 
 ---
 
-## ✅ Checklist Lengkap
+## ✅ Senarai Semak Lengkap
 
 Sebelum build, pastikan:
-- [ ] JDK 17 installed
+- [ ] JDK 21 installed
 - [ ] Android Studio installed
 - [ ] Android SDK API Level 33 downloaded
 - [ ] ANDROID_HOME environment variable set
@@ -268,12 +267,31 @@ Sebelum build, pastikan:
 - [ ] Emulator setup atau phone connected
 - [ ] Website URL betul dalam config
 
+## 🔔 Integrasi Firebase (Notifikasi Push)
+
+Langkah ringkas aktivasi FCM:
+1. Buka Firebase Console → Create Project (atau gunakan sedia ada).
+2. Tambah Android app dengan package name: `my.edu.upsi.portal.staff`.
+3. Muat turun `google-services.json` dan letak di `android/app/google-services.json`.
+4. Jalankan `npm run build` dan bina APK. Token FCM akan dipaparkan di log (boleh hantar ke server).
+
+Perubahan yang memerlukan anda ulang integrasi Firebase:
+- Tukar package name (applicationId).
+- Tukar keystore / SHA-1 untuk ciri yang perlukan verifikasi (contoh: Sign-In). 
+- Tukar projek Firebase baharu.
+
+Perubahan yang TIDAK memerlukan integrasi semula:
+- Ubah warna tema, nama paparan (appName), kandungan UI HTML/CSS/JS,
+- Kemaskini versi plugin tanpa menukar applicationId.
+
+**Nota**: Pastikan hanya satu appId final digunakan sebelum produksi untuk elak perlu buat semula app di Firebase.
+
 **Selamat mencuba! 🚀**
 
-Aplikasi ini akan berikan user experience seperti native app dengan:
-- Native splash screen
-- Status bar styling
+Aplikasi ini menyediakan pengalaman hampir native:
+- Splash screen
+- Status bar berwarna tema
 - Offline detection
-- Push notifications ready
-- Smooth navigation
-- Professional UI/UX
+- Struktur siap untuk push notifications
+- Navigasi lancar
+- UI/UX ringkas dan jelas

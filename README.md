@@ -1,6 +1,6 @@
-# Sistem Idin - UPSI Portal App
+# MyUPSI Portal Staff
 
-Aplikasi mobile Android untuk mengakses portal UPSI Staff (https://unistaff.upsi.edu.my) dengan pengalaman native app.
+Aplikasi Android rasmi yang membungkus portal staf UPSI (https://unistaff.upsi.edu.my) dengan pengalaman seperti aplikasi native.
 
 ## 🚀 Features
 
@@ -14,7 +14,7 @@ Aplikasi mobile Android untuk mengakses portal UPSI Staff (https://unistaff.upsi
 ## 📱 Platform
 
 - Android (Capacitor 7)
-- Target SDK: API Level 33 (Android 13)
+- Target SDK: API Level 34 (Android 14) atau mengikut konfigurasi projek
 
 ## 🛠️ Technology Stack
 
@@ -29,31 +29,32 @@ Aplikasi mobile Android untuk mengakses portal UPSI Staff (https://unistaff.upsi
 
 ## 📦 Installation
 
-### Prerequisites
+### Prasyarat
 
-- Node.js 18+ 
+- Node.js 20 LTS
+- Java 21 (Temurin/Adoptium)
 - Git
 
 ### Setup
 
-```bash
+```powershell
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/idinUPSI/UPSIPortal_Staff-App.git
 cd UPSIPortal-App
 
 # Install dependencies
-npm install
+npm ci
 
-# Sync with Android
+# Sync web assets to Android
 npm run build
 ```
 
 ## 🔨 Build APK
 
-### Using GitHub Actions (Automatic)
+### Menggunakan GitHub Actions (Automatik)
 
 1. Push code to GitHub:
-   ```bash
+  ```powershell
    git push origin main
    ```
 
@@ -61,9 +62,9 @@ npm run build
 
 3. Download APK from GitHub Actions tab
 
-### Local Build (If needed)
+### Bina Secara Lokal (Jika perlu)
 
-Requires Android Studio & SDK. See `PANDUAN_INSTALL.md` for details.
+Memerlukan Android Studio & SDK. Rujuk `PANDUAN_INSTALL.md` untuk butiran.
 
 ## 📖 Documentation
 
@@ -104,19 +105,36 @@ UPSIPortal-App/
 └── package.json           # Dependencies
 ```
 
-## 🔧 Configuration
+## 🔧 Konfigurasi
 
 ### App Configuration
 Edit `capacitor.config.json`:
-- `appId`: Android package name
-- `appName`: Display name
-- `server.url`: Backend URL
+- `appId`: Nama pakej Android. Terkini: `my.edu.upsi.portal.staff`
+- `appName`: Nama paparan aplikasi. Terkini: `MyUPSI Portal Staff`
+- `server.url`: URL portal UPSI
 
 ### Theme & Styling
 Edit `www/index.html`:
-- Colors (search for `#1976D2`)
-- Splash screen text
-- Header title
+- Warna tema (kini `#663399`)
+- Teks splash screen
+- Tajuk header
+
+## 🔔 Notifikasi (Firebase Cloud Messaging)
+
+Untuk mengaktifkan notifikasi push:
+
+1. Bina projek Firebase dan tambah app Android dengan package name tepat: `my.edu.upsi.portal.staff`.
+2. Muat turun `google-services.json` dan letak di `android/app/google-services.json`.
+3. Build semula app. Plugin Google services akan diaktifkan secara automatik jika fail tersebut wujud.
+4. Di app, token FCM akan dilog (rujuk konsol). Hantar token ke server anda untuk pengurusan pengkapsulan notifikasi.
+
+Perubahan masa hadapan yang memerlukan anda ulang langkah Firebase:
+- Menukar package name/applicationId → perlu buat Android app baharu di Firebase & guna fail `google-services.json` yang baharu.
+- Menukar SHA-1/keystore untuk release signing → kemas kini di Firebase (Project settings → App integrity).
+- Menukar project Firebase → semestinya perlu fail baharu.
+
+Perubahan yang TIDAK memerlukan integrasi semula:
+- Tukar warna/tema, nama paparan (appName), kandungan web, URL server, atau kemaskini kod HTML/CSS/JS biasa.
 
 ## 📝 License
 
