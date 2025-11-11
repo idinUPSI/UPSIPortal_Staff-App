@@ -3,16 +3,12 @@ package my.edu.upsi.portal.staff;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -21,8 +17,6 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -35,37 +29,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Fix status bar overlap
-        setupStatusBar();
-    }
-    
-    private void setupStatusBar() {
-        Window window = getWindow();
-        
-        // Enable edge-to-edge but with proper insets
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+
-            WindowCompat.setDecorFitsSystemWindows(window, false);
-            window.setStatusBarColor(Color.parseColor("#663399"));
-            
-            // Set status bar icons to light (white)
-            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
-            if (controller != null) {
-                controller.setAppearanceLightStatusBars(false); // Dark icons = false, Light icons = true
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Android 6-10
-            window.setStatusBarColor(Color.parseColor("#663399"));
-            
-            // Light status bar (dark icons)
-            View decorView = window.getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        } else {
-            // Android 5
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.parseColor("#663399"));
-        }
     }
 
     @Override
