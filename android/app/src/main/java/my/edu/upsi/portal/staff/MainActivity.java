@@ -145,10 +145,11 @@ public class MainActivity extends BridgeActivity {
                             // Log SSL error for debugging
                             android.util.Log.e("MainActivity", "SSL Error: " + error.toString());
 
-                            // In debug builds, allow proceed to ease testing
+                            // In debug builds (app debuggable), allow proceed to ease testing
                             // In release builds, cancel but DO NOT force offline page
                             try {
-                                if (my.edu.upsi.portal.staff.BuildConfig.DEBUG) {
+                                boolean isDebuggable = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+                                if (isDebuggable) {
                                     handler.proceed();
                                 } else {
                                     handler.cancel();
