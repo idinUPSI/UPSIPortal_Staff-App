@@ -70,6 +70,25 @@
             font-size: 14px;
             opacity: 0.8;
         }
+
+        .offline-msg {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .retry-btn {
+            background: #663399;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -80,15 +99,64 @@
     <div class="status" id="status">Memuatkan...</div>
 
     <script>
-        // Redirect to portal after 3 seconds
-        setTimeout(() => {
-            window.location.href = 'https://unistaff.upsi.edu.my';
-        }, 3000);
+        let redirectAttempted = false;
 
-        // Update status
+        function checkConnection() {
+            return fetch('https://unistaff.upsi.edu.my', { 
+                method: 'HEAD', 
+                mode: 'no-cors',
+                cache: 'no-cache'
+            }).then(() => true).catch(() => false);
+        }
+
+        function showOfflineMessage() {
+            document.getElementById('status').innerHTML = `
+                <div class="offline-msg">
+                    ⚠️ Tiada sambungan internet<br>
+                    Sila sambung ke internet untuk akses Portal UPSI
+                    <br><button class="retry-btn" onclick="attemptRedirect()">Cuba Lagi</button>
+                </div>
+            `;
+        }
+
+        function attemptRedirect() {
+            if (redirectAttempted) return;
+            
+            document.getElementById('status').textContent = 'Memeriksa sambungan...';
+            
+            checkConnection().then(isOnline => {
+                if (isOnline) {
+                    document.getElementById('status').textContent = 'Menyambung ke portal...';
+                    redirectAttempted = true;
+                    window.location.href = 'https://unistaff.upsi.edu.my';
+                } else {
+                    showOfflineMessage();
+                }
+            }).catch(() => {
+                // Fallback: Try redirect anyway after 5 seconds
+                setTimeout(() => {
+                    if (!redirectAttempted) {
+                        redirectAttempted = true;
+                        window.location.href = 'https://unistaff.upsi.edu.my';
+                    }
+                }, 5000);
+                showOfflineMessage();
+            });
+        }
+
+        // Initial check after 2 seconds
         setTimeout(() => {
-            document.getElementById('status').textContent = 'Menyambung ke portal...';
-        }, 1000);
+            document.getElementById('status').textContent = 'Memeriksa sambungan...';
+            attemptRedirect();
+        }, 2000);
+
+        // Fallback: Always redirect after 10 seconds regardless
+        setTimeout(() => {
+            if (!redirectAttempted) {
+                redirectAttempted = true;
+                window.location.href = 'https://unistaff.upsi.edu.my';
+            }
+        }, 10000);
     </script>
 </body>
 </html>
