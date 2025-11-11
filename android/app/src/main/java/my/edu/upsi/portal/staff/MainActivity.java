@@ -83,14 +83,11 @@ public class MainActivity extends BridgeActivity {
             window.setStatusBarColor(Color.parseColor("#663399"));
         }
         
-        // Additional: Ensure the root view respects system windows (padding for status bar)
-        decorView.setFitsSystemWindows(true);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        requestNotificationPermissionIfNeeded();
         setupNetworkMonitoring();
         setupOfflineErrorHandler();
         setupPullToRefresh();
@@ -261,15 +258,6 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
-            }
-        }
-    }
 
     private void setupNetworkMonitoring() {
         connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
