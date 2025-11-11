@@ -272,9 +272,6 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "WebView setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     

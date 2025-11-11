@@ -172,16 +172,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void setupWebViewClient() {
-        try {
-            if (getBridge() == null) {
-                Toast.makeText(this, "Bridge is null", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (getBridge().getWebView() == null) {
-                Toast.makeText(this, "WebView is null", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
+        if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
             
             // Enable JavaScript (required for offline page interaction)
@@ -272,9 +263,6 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "WebView setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     

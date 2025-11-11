@@ -50,10 +50,12 @@ public class MainActivity extends BridgeActivity {
         setupNetworkMonitoring();
         
         // Delay UI setup to ensure WebView is ready
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            addCustomUI();
-            setupWebViewClient();
-        }, 500);
+        this.runOnUiThread(() -> {
+            this.postDelayed(() -> {
+                addCustomUI();
+                setupWebViewClient();
+            }, 300);
+        });
     }
 
     private void addCustomUI() {
@@ -69,7 +71,6 @@ public class MainActivity extends BridgeActivity {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ));
-            overlayContainer.setElevation(100); // Ensure it's on top
             
             // Create header bar
             LinearLayout headerBar = createHeaderBar();
@@ -84,7 +85,6 @@ public class MainActivity extends BridgeActivity {
             
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "UI setup error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -172,16 +172,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void setupWebViewClient() {
-        try {
-            if (getBridge() == null) {
-                Toast.makeText(this, "Bridge is null", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (getBridge().getWebView() == null) {
-                Toast.makeText(this, "WebView is null", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
+        if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
             
             // Enable JavaScript (required for offline page interaction)
@@ -272,9 +263,6 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "WebView setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     
