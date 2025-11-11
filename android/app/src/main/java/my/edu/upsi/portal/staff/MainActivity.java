@@ -49,6 +49,42 @@ public class MainActivity extends BridgeActivity {
         // Fix status bar overlap
         setupStatusBar();
     }
+
+        // Inject CSS to add padding for status bar on web content
+        private void injectStatusBarPaddingCSS(WebView webView) {
+            // Get status bar height
+            int statusBarHeight = 0;
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+            }
+
+            // Convert to dp for CSS
+            float scale = getResources().getDisplayMetrics().density;
+            int statusBarHeightDp = (int) (statusBarHeight / scale);
+
+            // JavaScript to inject CSS
+            String js = "(function() {" +
+                    "if (!document.getElementById('status-bar-padding-fix')) {" +
+                    "  var style = document.createElement('style');" +
+                    "  style.id = 'status-bar-padding-fix';" +
+                    "  style.innerHTML = `" +
+                    "    html, body { " +
+                    "      padding-top: " + statusBarHeightDp + "px !important; " +
+                    "      margin-top: 0 !important; " +
+                    "    } " +
+                    "    .page-header, .navbar, .header, [class*='header'] { " +
+                    "      padding-top: calc(3rem + " + statusBarHeightDp + "px) !important; " +
+                    "      margin-top: 0 !important; " +
+                    "    }" +
+                    "  `;" +
+                    "  document.head.appendChild(style);" +
+                    "  console.log('Status bar padding injected: " + statusBarHeightDp + "px');" +
+                    "}" +
+                    "})();";
+
+            webView.evaluateJavascript(js, null);
+        }
     
     private void setupStatusBar() {
         Window window = getWindow();
@@ -181,6 +217,9 @@ public class MainActivity extends BridgeActivity {
                             // Successfully loaded a real page
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
+                                
+                                // Inject CSS to prevent content overlap with status bar
+                                injectStatusBarPaddingCSS(view);
                             }
                             // Hide pull-to-refresh indicator
                             if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
