@@ -70,75 +70,10 @@ public class MainActivity extends BridgeActivity {
                         });
                     }
                 }
-
-                // Setup custom WebViewClient for error handling
-                setupWebViewClient();
             } catch (Exception e) {
                 // Silently handle any initialization errors
             }
         });
-    }
-
-    private void setupWebViewClient() {
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            WebView webView = getBridge().getWebView();
-            webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                    super.onPageStarted(view, url, favicon);
-                    // Hide offline banner when starting to load
-                    if (offlineBanner != null) {
-                        offlineBanner.setVisibility(View.GONE);
-                    }
-                }
-
-                @Override
-                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                    super.onReceivedError(view, request, error);
-                    
-                    // Only handle main frame errors
-                    if (request.isForMainFrame()) {
-                        runOnUiThread(() -> {
-                            // Show offline banner with error message
-                            if (offlineBanner != null) {
-                                offlineBanner.setText("Tiada sambungan internet. Sila semak rangkaian anda.");
-                                offlineBanner.setVisibility(View.VISIBLE);
-                            }
-                            
-                            // Load offline page
-                            String offlineHtml = "<!DOCTYPE html>" +
-                                "<html><head><meta charset='UTF-8'>" +
-                                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
-                                "<style>" +
-                                "body { font-family: sans-serif; padding: 40px 20px; text-align: center; background: #f5f5f5; }" +
-                                ".icon { font-size: 64px; margin-bottom: 20px; }" +
-                                "h1 { color: #663399; font-size: 24px; margin-bottom: 10px; }" +
-                                "p { color: #666; line-height: 1.6; margin-bottom: 20px; }" +
-                                ".btn { background: #663399; color: white; border: none; padding: 12px 24px; " +
-                                "border-radius: 4px; font-size: 16px; cursor: pointer; }" +
-                                "</style></head><body>" +
-                                "<div class='icon'>📡</div>" +
-                                "<h1>Tiada Sambungan Internet</h1>" +
-                                "<p>Sila semak sambungan internet anda dan cuba lagi.</p>" +
-                                "<p>Pastikan WiFi atau data selular anda aktif.</p>" +
-                                "<button class='btn' onclick='location.reload()'>Cuba Lagi</button>" +
-                                "</body></html>";
-                            
-                            view.loadDataWithBaseURL(null, offlineHtml, "text/html", "UTF-8", null);
-                        });
-                    }
-                }
-
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
-                    // Page loaded successfully, ensure banner is hidden
-                    if (offlineBanner != null && !url.equals("about:blank")) {
-                        offlineBanner.setVisibility(View.GONE);
-                    }
-                }
-            });
-        }
     }
 
     @Override

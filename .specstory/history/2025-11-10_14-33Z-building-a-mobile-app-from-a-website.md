@@ -3001,6 +3001,28 @@ Error: Process completed with exit code 1.
 
 _**Agent (model copilot/auto)**_
 
+Perfect! Now I can see the exact error. The issue is that `onStart()` and `onStop()` in `BridgeActivity` are declared as `public`, but I'm overriding them as `protected`. I need to change them to `public`. 
+```
+
+```
+Fixed! The error was that in Java, when overriding methods, you cannot reduce the visibility. Since `BridgeActivity` declares `onStart()` and `onStop()` as `public`, our overrides must also be `public`, not `protected`.
+
+**Changes made:**
+- `protected void onStart()` → `public void onStart()`
+- `protected void onStop()` → `public void onStop()`
+
+The CI build should now succeed. This was a simple Java access modifier error that's now resolved.
+
+---
+
+_**User (2025-11-11 07:08Z)**_
+
+jika saya run local file html ia seperti ada splash dan header bar.  tapi bila saya run apk di phone saya, saya tak nampak splash, dan jika saya off kan internet, ia nampak error web page not available. 
+
+---
+
+_**Agent (model copilot/auto)**_
+
 
 
 ---
