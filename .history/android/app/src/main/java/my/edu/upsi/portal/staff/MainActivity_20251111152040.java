@@ -91,38 +91,13 @@ public class MainActivity extends BridgeActivity {
     private void setupWebViewClient() {
         if (getBridge() != null && getBridge().getWebView() != null) {
             WebView webView = getBridge().getWebView();
-            
-            // Enable JavaScript (required for offline page interaction)
-            webView.getSettings().setJavaScriptEnabled(true);
-            
-            // Add JavaScript interface for retry button
-            webView.addJavascriptInterface(new Object() {
-                @android.webkit.JavascriptInterface
-                public void retryConnection() {
-                    runOnUiThread(() -> {
-                        if (isNetworkAvailable()) {
-                            // Network is back, reload the portal
-                            webView.loadUrl(HOME_URL);
-                            Toast.makeText(MainActivity.this, "Cuba menyambung semula...", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Still no network
-                            Toast.makeText(MainActivity.this, "Masih tiada sambungan internet", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            }, "AndroidInterface");
-            
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
                     super.onPageStarted(view, url, favicon);
-                    
-                    // Don't hide banner if loading offline page
-                    if (!url.startsWith("data:")) {
-                        isShowingOfflinePage = false;
-                        if (offlineBanner != null) {
-                            offlineBanner.setVisibility(View.GONE);
-                        }
+                    // Hide offline banner when starting to load
+                    if (offlineBanner != null) {
+                        offlineBanner.setVisibility(View.GONE);
                     }
                 }
 
@@ -133,46 +108,29 @@ public class MainActivity extends BridgeActivity {
                     // Only handle main frame errors
                     if (request.isForMainFrame()) {
                         runOnUiThread(() -> {
-                            isShowingOfflinePage = true;
-                            
                             // Show offline banner with error message
                             if (offlineBanner != null) {
                                 offlineBanner.setText("Tiada sambungan internet. Sila semak rangkaian anda.");
                                 offlineBanner.setVisibility(View.VISIBLE);
                             }
                             
-                            // Load improved offline page with proper retry mechanism
+                            // Load offline page
                             String offlineHtml = "<!DOCTYPE html>" +
                                 "<html><head><meta charset='UTF-8'>" +
                                 "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
                                 "<style>" +
-                                "* { margin: 0; padding: 0; box-sizing: border-box; }" +
-                                "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; " +
-                                "padding: 60px 20px; text-align: center; background: #f5f5f5; min-height: 100vh; " +
-                                "display: flex; flex-direction: column; justify-content: center; align-items: center; }" +
-                                ".icon { font-size: 80px; margin-bottom: 24px; opacity: 0.8; }" +
-                                "h1 { color: #663399; font-size: 26px; font-weight: 600; margin-bottom: 16px; }" +
-                                "p { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 12px; max-width: 400px; }" +
-                                ".btn { background: #663399; color: white; border: none; padding: 14px 32px; " +
-                                "border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; " +
-                                "margin-top: 20px; box-shadow: 0 2px 8px rgba(102,51,153,0.3); " +
-                                "transition: all 0.2s; }" +
-                                ".btn:active { background: #552b8a; transform: scale(0.98); }" +
-                                ".tips { margin-top: 32px; padding: 16px; background: white; border-radius: 8px; " +
-                                "max-width: 400px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }" +
-                                ".tips h3 { color: #663399; font-size: 14px; margin-bottom: 8px; }" +
-                                ".tips ul { text-align: left; color: #666; font-size: 14px; line-height: 1.8; }" +
+                                "body { font-family: sans-serif; padding: 40px 20px; text-align: center; background: #f5f5f5; }" +
+                                ".icon { font-size: 64px; margin-bottom: 20px; }" +
+                                "h1 { color: #663399; font-size: 24px; margin-bottom: 10px; }" +
+                                "p { color: #666; line-height: 1.6; margin-bottom: 20px; }" +
+                                ".btn { background: #663399; color: white; border: none; padding: 12px 24px; " +
+                                "border-radius: 4px; font-size: 16px; cursor: pointer; }" +
                                 "</style></head><body>" +
                                 "<div class='icon'>📡</div>" +
                                 "<h1>Tiada Sambungan Internet</h1>" +
-                                "<p>Portal MyUPSI memerlukan sambungan internet untuk berfungsi.</p>" +
-                                "<p>Sila semak sambungan anda dan cuba lagi.</p>" +
-                                "<button class='btn' onclick='AndroidInterface.retryConnection()'>Cuba Lagi</button>" +
-                                "<div class='tips'><h3>💡 Tips:</h3><ul>" +
-                                "<li>Pastikan WiFi atau data selular aktif</li>" +
-                                "<li>Cuba toggle Airplane Mode</li>" +
-                                "<li>Semak penggunaan data</li>" +
-                                "</ul></div>" +
+                                "<p>Sila semak sambungan internet anda dan cuba lagi.</p>" +
+                                "<p>Pastikan WiFi atau data selular anda aktif.</p>" +
+                                "<button class='btn' onclick='location.reload()'>Cuba Lagi</button>" +
                                 "</body></html>";
                             
                             view.loadDataWithBaseURL(null, offlineHtml, "text/html", "UTF-8", null);
@@ -183,29 +141,13 @@ public class MainActivity extends BridgeActivity {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
-                    
-                    // Page loaded successfully
-                    if (!url.startsWith("data:") && !url.equals("about:blank")) {
-                        isShowingOfflinePage = false;
-                        if (offlineBanner != null) {
-                            offlineBanner.setVisibility(View.GONE);
-                        }
+                    // Page loaded successfully, ensure banner is hidden
+                    if (offlineBanner != null && !url.equals("about:blank")) {
+                        offlineBanner.setVisibility(View.GONE);
                     }
                 }
             });
         }
-    }
-    
-    private boolean isNetworkAvailable() {
-        if (connectivityManager == null) return false;
-        
-        Network network = connectivityManager.getActiveNetwork();
-        if (network == null) return false;
-        
-        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-        return capabilities != null && 
-               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
     @Override
@@ -242,11 +184,6 @@ public class MainActivity extends BridgeActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Sambungan internet tersedia", Toast.LENGTH_SHORT).show();
                     if (offlineBanner != null) offlineBanner.setVisibility(View.GONE);
-                    
-                    // Auto-reload if showing offline page
-                    if (isShowingOfflinePage && getBridge() != null && getBridge().getWebView() != null) {
-                        getBridge().getWebView().loadUrl(HOME_URL);
-                    }
                 });
             }
 
@@ -254,9 +191,7 @@ public class MainActivity extends BridgeActivity {
             public void onLost(Network network) {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
-                    if (offlineBanner != null && !isShowingOfflinePage) {
-                        offlineBanner.setVisibility(View.VISIBLE);
-                    }
+                    if (offlineBanner != null) offlineBanner.setVisibility(View.VISIBLE);
                 });
             }
         };

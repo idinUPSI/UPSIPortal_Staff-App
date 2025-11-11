@@ -242,11 +242,6 @@ public class MainActivity extends BridgeActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Sambungan internet tersedia", Toast.LENGTH_SHORT).show();
                     if (offlineBanner != null) offlineBanner.setVisibility(View.GONE);
-                    
-                    // Auto-reload if showing offline page
-                    if (isShowingOfflinePage && getBridge() != null && getBridge().getWebView() != null) {
-                        getBridge().getWebView().loadUrl(HOME_URL);
-                    }
                 });
             }
 
@@ -254,9 +249,7 @@ public class MainActivity extends BridgeActivity {
             public void onLost(Network network) {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
-                    if (offlineBanner != null && !isShowingOfflinePage) {
-                        offlineBanner.setVisibility(View.VISIBLE);
-                    }
+                    if (offlineBanner != null) offlineBanner.setVisibility(View.VISIBLE);
                 });
             }
         };

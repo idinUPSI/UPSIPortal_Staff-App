@@ -3015,7 +3015,7 @@ The CI build should now succeed. This was a simple Java access modifier error th
 
 ---
 
-_**User (2025-11-11 07:08Z)**_
+_**User (2025-11-11 07:12Z)**_
 
 jika saya run local file html ia seperti ada splash dan header bar.  tapi bila saya run apk di phone saya, saya tak nampak splash, dan jika saya off kan internet, ia nampak error web page not available. 
 
@@ -3023,7 +3023,98 @@ jika saya run local file html ia seperti ada splash dan header bar.  tapi bila s
 
 _**Agent (model copilot/auto)**_
 
+Saya faham masalahnya. Ini kerana app sekarang menggunakan **mode `server.url`** (direct load) yang bypass kesemua HTML wrapper code dalam `index.html`. Native Android UI yang kita buat sepatutnya menggantikan HTML wrapper, tetapi masih ada isu dengan error handling.
 
+Mari saya check status CI build dulu, kemudian kita perbaiki: Sekarang saya faham situasinya. Dengan `server.url` mode, app load terus ke portal remote, jadi:
+
+1. ❌ **Splash screen HTML** tidak akan muncul (kerana app load terus ke `https://unistaff.upsi.edu.my`)
+2. ❌ **Header bar HTML** tidak akan muncul (kerana HTML wrapper kita tidak digunakan)
+3. ✅ **Native header bar Android** sepatutnya muncul (dari `activity_main.xml`)
+4. ❌ **Error "page not available"** muncul bila offline kerana WebView tidak dapat load portal remote
+
+**Penyelesaian:** Kita perlu tambahkan **native splash screen** dan pastikan **native offline handling** berfungsi dengan baik. Saya akan:
+
+1. **Enable native Capacitor splash screen** (bukan HTML)
+2. **Tambah WebViewClient custom** untuk handle offline errors dengan UI yang lebih baik
+3. **Tambah offline page fallback** dalam assets 
+```
+
+```
+Sekarang saya akan tambahkan **custom WebViewClient** untuk handle offline errors dengan lebih baik: 
+```
+
+```
+
+```
+
+```
+Sekarang kita perlu update offline banner text dalam layout supaya boleh diubah: 
+```
+
+```
+Sekarang sync Capacitor config: Baik! Saya telah buat penambahbaikan besar untuk menyelesaikan masalah yang anda hadapi:
+
+## ✅ Penambahbaikan yang dibuat:
+
+### 1. **Native Splash Screen**
+- Aktifkan splash screen Capacitor native (bukan HTML)
+- Duration: 2 saat dengan spinner putih di atas background #663399
+- Akan muncul setiap kali app dibuka
+
+### 2. **Custom Offline Error Handling**
+- Tambah `WebViewClient` custom yang detect bila ada network error
+- Bila offline/error, app akan show:
+  - ⚠️ **Offline banner** di atas: "Tiada sambungan internet. Sila semak rangkaian anda."
+  - 📱 **Offline page** dengan design kemas dalam WebView:
+    - Icon 📡
+    - Mesej jelas "Tiada Sambungan Internet"
+    - Button "Cuba Lagi" untuk reload
+- Bukan lagi error Android yang buruk "Web page not available"
+
+### 3. **Improved Banner Behavior**
+- Banner hilang automatik bila page mula load
+- Banner muncul dengan mesej yang sesuai bila ada error
+- Padding lebih besar (12dp) dan center text
+
+## 📱 Apa yang akan user nampak sekarang:
+
+**Scenario 1: Online** ✅
+1. Splash screen purple dengan spinner (2 saat)
+2. Portal load dengan header bar native di atas
+3. Boleh guna Refresh & Home button
+
+**Scenario 2: Offline saat buka app** ⚠️
+1. Splash screen purple (2 saat)
+2. Header bar native muncul
+3. **Offline banner orange** muncul di bawah header
+4. WebView show **offline page kemas** dengan:
+   - "Tiada Sambungan Internet"
+   - Button "Cuba Lagi"
+
+**Scenario 3: Online → Offline (semasa guna app)** 🔄
+1. Toast "Tiada sambungan internet" muncul
+2. Offline banner muncul
+
+CI build sedang running. APK yang baru akan ada semua feature ini! 🎉
+
+---
+
+_**User (2025-11-11 07:20Z)**_
+
+ini gambar saya run file index.html. tapi bila guna apk run di phone, tidak keluar begini. walaupun saya close app, dan open semula, tapi sekarang ni ada improvment sudah ada page paparan tiada sambungan internet, cuma bila klik butang cuba lagi, ia hilang dan terus white screen. 
+
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Baik, saya faham masalahnya! Ini kerana:
+
+1. ✅ **HTML index.html** yang cantik itu TIDAK digunakan bila app run di phone (kerana `server.url` mode)
+2. ✅ **Offline page** sudah muncul (progress!)
+3. ❌ **Button "Cuba Lagi"** bila diklik menyebabkan white screen kerana try reload ke portal tanpa check network status dulu
+
+Mari saya perbaiki: 
 
 ---
 
