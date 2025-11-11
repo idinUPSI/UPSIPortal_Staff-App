@@ -95,59 +95,73 @@ public class MainActivity extends BridgeActivity {
         setupOfflineErrorHandler();
         setupPullToRefresh();
         setupWebViewSettings();
-<<<<<<< HEAD
-        injectStatusBarPadding();
     }
-    
-    // Inject CSS to add padding for status bar - force content below status bar
-    private void injectStatusBarPadding() {
+
+    private void setupOfflineErrorHandler() {
+        // Wait for WebView to be ready
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             try {
                 if (getBridge() != null && getBridge().getWebView() != null) {
-                    injectStatusBarPaddingDirect(getBridge().getWebView());
-                }
-            } catch (Exception e) {
-                android.util.Log.e("MainActivity", "Error injecting status bar padding: " + e.getMessage());
-            }
-        }, 2000); // Wait for page to load
-    }
-    
-    private void injectStatusBarPaddingDirect(WebView webView) {
-        try {
-            // Calculate status bar height
-            int statusBarHeight = 0;
-            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-            }
-            
-            // Make final for use in lambda
-            final int finalStatusBarHeight = statusBarHeight;
-            
-            // Inject CSS with multiple strategies to ensure it works
-            String javascript = 
-                "(function() {" +
-                "  var statusBarHeight = " + finalStatusBarHeight + ";" +
-                "  " +
-                "  // Remove any existing injected styles" +
-                "  var oldStyle = document.getElementById('statusbar-padding-fix');" +
-                "  if (oldStyle) oldStyle.remove();" +
-                "  " +
-                "  // Create new style element" +
-                "  var style = document.createElement('style');" +
-                "  style.id = 'statusbar-padding-fix';" +
-                "  style.innerHTML = '" +
-                "    * { " +
-                "      --status-bar-height: " + finalStatusBarHeight + "px; " +
-                "    }" +
-                }
-                            // Show error to user
-                                Toast.makeText(MainActivity.this,
-                                    "Ralat keselamatan SSL. Sila hubungi pentadbir sistem.",
-                                    Toast.LENGTH_LONG).show();
-                                isShowingOfflinePage = true;
-                                loadOfflinePage(view);
-                            });
+                    WebView webView = getBridge().getWebView();
+                    
+                    // Enable JavaScript for offline page
+                    webView.getSettings().setJavaScriptEnabled(true);
+                    webView.getSettings().setDomStorageEnabled(true);
+                    webView.addJavascriptInterface(new WebAppInterface(), "AndroidInterface");
+                    
+                    webView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                            // Handle only MAIN FRAME errors carefully
+                            if (request.isForMainFrame()) {
+                                runOnUiThread(() -> {
+                                    boolean noNetwork = !isNetworkAvailable();
+
+                                    // Log error details for diagnostics
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        String errorMsg = "onReceivedError (main frame): code=" + error.getErrorCode() + ", desc=" + error.getDescription();
+                                        android.util.Log.e("MainActivity", errorMsg);
+                                    }
+
+                                    if (noNetwork) {
+                                        isShowingOfflinePage = true;
+                                        loadOfflinePage(view);
+                                    } else {
+                                        // Keep current page, show a lightweight message instead of forcing offline page
+                                        Toast.makeText(MainActivity.this,
+                                                "Ralat memuat halaman. Cuba lagi.",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                // Stop default handling for main-frame
+                                return;
+                            }
+                            // For subresource errors, let default handling proceed
+                            super.onReceivedError(view, request, error);
+                        }
+
+                        @Override
+                        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                            // Log SSL error for debugging
+                            android.util.Log.e("MainActivity", "SSL Error: " + error.toString());
+
+                            // In debug builds, allow proceed to ease testing
+                            // In release builds, cancel but DO NOT force offline page
+                            try {
+                                if (my.edu.upsi.portal.staff.BuildConfig.DEBUG) {
+                                    handler.proceed();
+                                } else {
+                                    handler.cancel();
+                                    runOnUiThread(() -> Toast.makeText(
+                                            MainActivity.this,
+                                            "Ralat keselamatan SSL. Sila hubungi pentadbir sistem.",
+                                            Toast.LENGTH_LONG
+                                    ).show());
+                                }
+                            } catch (Exception ex) {
+                                handler.cancel();
+                            }
+                            // Don't load offline page here to avoid false offline state
                         }
 
                         @Override
