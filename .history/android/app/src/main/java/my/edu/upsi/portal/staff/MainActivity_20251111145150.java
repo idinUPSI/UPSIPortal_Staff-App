@@ -24,7 +24,7 @@ public class MainActivity extends BridgeActivity {
     private static final String HOME_URL = "https://unistaff.upsi.edu.my";
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
         requestNotificationPermissionIfNeeded();
         setupNetworkMonitoring();
@@ -72,7 +72,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
         if (connectivityManager != null && networkCallback != null) {
             try {

@@ -24,55 +24,35 @@ public class MainActivity extends BridgeActivity {
     private static final String HOME_URL = "https://unistaff.upsi.edu.my";
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
         requestNotificationPermissionIfNeeded();
         setupNetworkMonitoring();
-        setupNativeUI();
-    }
 
-    private void setupNativeUI() {
-        // Use a handler to ensure views are ready
-        this.runOnUiThread(() -> {
-            try {
-                // Find views using resource IDs
-                int offlineBannerId = getResources().getIdentifier("offline_banner", "id", getPackageName());
-                int btnRefreshId = getResources().getIdentifier("btn_refresh", "id", getPackageName());
-                int btnHomeId = getResources().getIdentifier("btn_home", "id", getPackageName());
+        // Wire up header buttons and banner
+        offlineBanner = findViewById(getResources().getIdentifier("offline_banner", "id", getPackageName()));
+        Button btnRefresh = findViewById(getResources().getIdentifier("btn_refresh", "id", getPackageName()));
+        Button btnHome = findViewById(getResources().getIdentifier("btn_home", "id", getPackageName()));
 
-                if (offlineBannerId != 0) {
-                    offlineBanner = findViewById(offlineBannerId);
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().reload();
                 }
+            });
+        }
 
-                if (btnRefreshId != 0) {
-                    Button btnRefresh = findViewById(btnRefreshId);
-                    if (btnRefresh != null) {
-                        btnRefresh.setOnClickListener(v -> {
-                            if (getBridge() != null && getBridge().getWebView() != null) {
-                                getBridge().getWebView().reload();
-                            }
-                        });
-                    }
+        if (btnHome != null) {
+            btnHome.setOnClickListener(v -> {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().loadUrl(HOME_URL);
                 }
-
-                if (btnHomeId != 0) {
-                    Button btnHome = findViewById(btnHomeId);
-                    if (btnHome != null) {
-                        btnHome.setOnClickListener(v -> {
-                            if (getBridge() != null && getBridge().getWebView() != null) {
-                                getBridge().getWebView().loadUrl(HOME_URL);
-                            }
-                        });
-                    }
-                }
-            } catch (Exception e) {
-                // Silently handle any initialization errors
-            }
-        });
+            });
+        }
     }
 
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
         if (connectivityManager != null && networkCallback != null) {
             try {

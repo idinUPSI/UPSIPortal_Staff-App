@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MyUPSI Portal Staff</string>
+    <string name="title_activity_main">MyUPSI Portal Staff</string>
+    <string name="package_name">my.edu.upsi.portal.staff</string>
+    <string name="custom_url_scheme">my.edu.upsi.portal.staff</string>
+</resources>

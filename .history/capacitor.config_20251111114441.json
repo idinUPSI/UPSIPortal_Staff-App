@@ -1,0 +1,6 @@
+{
+  "appId": "my.edu.upsi.portal.staff",
+  "appName": "MyUPSI Portal Staff",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
