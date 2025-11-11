@@ -9,21 +9,19 @@
         const style = document.createElement('style');
         style.id = 'upsi-mobile-css';
         style.textContent = `
-            @media only screen and (max-width: 576px) {
-                .page-header {
-                    height: auto !important;
-                    padding-top: 3rem !important;
-                }
-                
-                /* Additional mobile optimizations */
-                body {
-                    padding-top: env(safe-area-inset-top) !important;
-                }
-                
-                .container-fluid {
-                    padding-left: 1rem !important;
-                    padding-right: 1rem !important;
-                }
+            .page-header {
+                height: auto !important;
+                padding-top: 3rem !important;
+            }
+            
+            /* Additional mobile optimizations */
+            body {
+                padding-top: env(safe-area-inset-top) !important;
+            }
+            
+            .container-fluid {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
             }
         `;
         
