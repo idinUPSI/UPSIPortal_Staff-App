@@ -12,6 +12,11 @@
       "androidSplashResourceName": "splash",
       "showSpinner": true,
       "spinnerColor": "#FFFFFF"
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#663399",
+      "overlaysWebView": false
     }
   }
 }
