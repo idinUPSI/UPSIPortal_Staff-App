@@ -126,6 +126,20 @@
             `;
         }
 
+        function injectPortalCSS() {
+            // Inject CSS for mobile optimization
+            const style = document.createElement('style');
+            style.textContent = `
+                @media only screen and (max-width: 576px) {
+                    .page-header {
+                        height: auto !important;
+                        padding-top: 3rem !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         function attemptRedirect() {
             if (redirectAttempted) return;
             
@@ -135,7 +149,22 @@
                 if (isOnline) {
                     document.getElementById('status').textContent = 'Menyambung ke portal...';
                     redirectAttempted = true;
+                    
+                    // Inject CSS before redirect
+                    injectPortalCSS();
+                    
+                    // Add CSS injection after page loads
+                    const originalLocation = window.location.href;
                     window.location.href = 'https://unistaff.upsi.edu.my';
+                    
+                    // Try to inject CSS after portal loads (if same origin)
+                    setTimeout(() => {
+                        try {
+                            injectPortalCSS();
+                        } catch(e) {
+                            console.log('CSS injection blocked by CORS');
+                        }
+                    }, 2000);
                 } else {
                     showOfflineMessage();
                 }
@@ -144,6 +173,7 @@
                 setTimeout(() => {
                     if (!redirectAttempted) {
                         redirectAttempted = true;
+                        injectPortalCSS();
                         window.location.href = 'https://unistaff.upsi.edu.my';
                     }
                 }, 5000);
