@@ -16,7 +16,8 @@ node_modules/
 npm-debug.log
 yarn-error.log
 yarn.lock
-package-lock.json
+# Keep lockfile for deterministic builds
+# package-lock.json
 
 # Capacitor
 .capacitor/
