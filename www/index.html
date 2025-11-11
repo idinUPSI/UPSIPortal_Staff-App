@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#663399">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://unistaff.upsi.edu.my; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://unistaff.upsi.edu.my;">
     <title>MyUPSI Portal Staff</title>
-    <link rel="manifest" href="manifest.json">
     <style>
         * {
             margin: 0;
@@ -37,13 +33,9 @@
             justify-content: center;
             margin-bottom: 24px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .logo img {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
+            font-size: 48px;
+            font-weight: bold;
+            color: #663399;
         }
 
         h1 {
@@ -77,182 +69,26 @@
             margin-top: 24px;
             font-size: 14px;
             opacity: 0.8;
-            transition: opacity 0.3s ease;
-        }
-
-        .error {
-            color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-
-        .success {
-            color: #51cf66;
-            background: rgba(81, 207, 102, 0.1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-
-        .offline {
-            color: #ffd43b;
-            background: rgba(255, 212, 59, 0.1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-top: 16px;
         }
     </style>
 </head>
 <body>
-    <div class="logo">
-        <img src="assets/images/upsi-logo.png" alt="UPSI Logo" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\"font-size:48px;font-weight:bold;color:#663399\">UPSI</div>'">
-    </div>
+    <div class="logo">UPSI</div>
     <h1>MyUPSI Portal Staff</h1>
     <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
     <div class="spinner"></div>
     <div class="status" id="status">Memuatkan...</div>
 
-    <!-- Capacitor Core - Will handle loading the actual app -->
-    <script src="cordova.js"></script>
-
     <script>
-        // Simple initialization for Capacitor
-        // The actual app will be loaded from the server URL configured in capacitor.config.json
-
-        let startTime = Date.now();
-
-        document.addEventListener('deviceready', function() {
-            console.log('Capacitor ready');
-            document.getElementById('status').textContent = 'Menyambung ke portal...';
-
-            try {
-                // Initialize Capacitor plugins
-                if (window.Capacitor) {
-                    // Status Bar
-                    if (window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
-                        const { StatusBar } = window.Capacitor.Plugins;
-                        StatusBar.setBackgroundColor({ color: '#663399' }).catch(err => {
-                            console.error('StatusBar setBackgroundColor error:', err);
-                        });
-                        StatusBar.setStyle({ style: 'DARK' }).catch(err => {
-                            console.error('StatusBar setStyle error:', err);
-                        });
-                    }
-
-                    // Hide splash screen after Capacitor is ready
-                    if (window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
-                        const { SplashScreen } = window.Capacitor.Plugins;
-                        // Ensure minimum display time of 2 seconds
-                        const elapsed = Date.now() - startTime;
-                        const delay = Math.max(0, 2000 - elapsed);
-                        setTimeout(() => {
-                            SplashScreen.hide().catch(err => {
-                                console.error('SplashScreen hide error:', err);
-                            });
-                        }, delay);
-                    }
-
-                    // Network monitoring with better error handling
-                    if (window.Capacitor.Plugins && window.Capacitor.Plugins.Network) {
-                        const { Network } = window.Capacitor.Plugins;
-                        
-                        // Initial network check
-                        Network.getStatus().then(status => {
-                            console.log('Network status:', status);
-                            updateNetworkStatus(status.connected);
-                        }).catch(err => {
-                            console.error('Network getStatus error:', err);
-                            showError('Ralat memeriksa sambungan');
-                        });
-
-                        // Listen for network changes
-                        Network.addListener('networkStatusChange', status => {
-                            console.log('Network status changed:', status);
-                            updateNetworkStatus(status.connected);
-                        });
-                    }
-
-                    console.log('Capacitor plugins initialized');
-                } else {
-                    console.warn('Capacitor not available');
-                    document.getElementById('status').textContent = 'Mod web - menyambung...';
-                }
-            } catch (error) {
-                console.error('Error initializing Capacitor:', error);
-                showError('Ralat memulakan aplikasi');
-            }
-        }, false);
-
-        // Network status helper function
-        function updateNetworkStatus(connected) {
-            const statusEl = document.getElementById('status');
-            statusEl.className = 'status';
-            
-            if (connected) {
-                statusEl.textContent = 'Menyambung ke portal...';
-                statusEl.classList.add('success');
-            } else {
-                statusEl.textContent = 'Tiada sambungan internet - mod offline';
-                statusEl.classList.add('offline');
-            }
-        }
-
-        // Show error with styling
-        function showError(message) {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = 'status error';
-        }
-
-        // Show success with styling
-        function showSuccess(message) {
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = message;
-            statusEl.className = 'status success';
-        }
-
-        // Error handling for uncaught errors
-        window.addEventListener('error', function(event) {
-            console.error('Uncaught error:', event.error);
-            showError('Ralat aplikasi');
-        });
-
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
-            showError('Ralat sambungan');
-        });
-
-        // Check if logo loaded, show fallback if not
-        setTimeout(() => {
-            const img = document.querySelector('.logo img');
-            if (img && (img.naturalWidth === 0 || img.complete === false)) {
-                img.onerror();
-            }
-        }, 1000);
-
-        // Register service worker for offline support
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('ServiceWorker registration failed:', error);
-                    });
-            });
-        }
-
-        // Always redirect after 3 seconds
+        // Redirect to portal after 3 seconds
         setTimeout(() => {
             window.location.href = 'https://unistaff.upsi.edu.my';
         }, 3000);
 
-        // Log app start
-        console.log('MyUPSI Portal Staff - Starting...');
-        console.log('Capacitor initialized, will redirect to portal');pacitor will load URL from config');
+        // Update status
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'Menyambung ke portal...';
+        }, 1000);
     </script>
 </body>
 </html>
