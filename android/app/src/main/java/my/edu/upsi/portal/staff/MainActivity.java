@@ -52,26 +52,39 @@ public class MainActivity extends BridgeActivity {
     
     private void setupStatusBar() {
         Window window = getWindow();
+        View decorView = window.getDecorView();
         
-        // Enable edge-to-edge but with proper insets
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+
-            WindowCompat.setDecorFitsSystemWindows(window, true); // TRUE = content stays below status bar
+            // Android 11+ (API 30+)
+            // Keep content BELOW system bars (status bar and navigation bar)
+            WindowCompat.setDecorFitsSystemWindows(window, true);
+            
+            // Set status bar color
             window.setStatusBarColor(Color.parseColor("#663399"));
             
-            // Set status bar icons to light (white)
-            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
+            // Set light/dark status bar icons
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, decorView);
             if (controller != null) {
-                controller.setAppearanceLightStatusBars(false); // Dark icons = false, Light icons = true
+                // false = light icons (white), true = dark icons (black)
+                controller.setAppearanceLightStatusBars(false);
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Android 6-10
+            // Android 6-10 (API 23-29)
             window.setStatusBarColor(Color.parseColor("#663399"));
+            
+            // For Android 6+, we can control status bar icon colors
+            int flags = decorView.getSystemUiVisibility();
+            // Remove SYSTEM_UI_FLAG_LIGHT_STATUS_BAR to use white icons
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            decorView.setSystemUiVisibility(flags);
         } else {
-            // Android 5
+            // Android 5 (API 21-22)
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Color.parseColor("#663399"));
         }
+        
+        // Additional: Ensure the root view respects system windows (padding for status bar)
+        decorView.setFitsSystemWindows(true);
     }
 
     @Override
