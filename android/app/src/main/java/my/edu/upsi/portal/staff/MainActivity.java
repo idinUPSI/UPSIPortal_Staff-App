@@ -46,8 +46,35 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Fix status bar overlap
+        // Fix status bar overlap - MUST be called before any view is created
         setupStatusBar();
+        
+        // Apply padding to bridge WebView container
+        applyWebViewContainerPadding();
+    }
+    
+    private void applyWebViewContainerPadding() {
+        // Calculate status bar height
+        int statusBarHeight = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+        }
+        
+        final int padding = statusBarHeight;
+        
+        // Apply padding to root view after a short delay
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                View rootView = findViewById(android.R.id.content);
+                if (rootView != null) {
+                    rootView.setPadding(0, padding, 0, 0);
+                    android.util.Log.i("MainActivity", "Applied padding to root view: " + padding + "px");
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error applying root padding: " + e.getMessage());
+            }
+        }, 100);
     }
     
     private void setupStatusBar() {
@@ -95,6 +122,82 @@ public class MainActivity extends BridgeActivity {
         setupOfflineErrorHandler();
         setupPullToRefresh();
         setupWebViewSettings();
+        injectStatusBarPadding();
+    }
+    
+    // Inject CSS to add padding for status bar - force content below status bar
+    private void injectStatusBarPadding() {
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    injectStatusBarPaddingDirect(getBridge().getWebView());
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error injecting status bar padding: " + e.getMessage());
+            }
+        }, 2000); // Wait for page to load
+    }
+    
+    private void injectStatusBarPaddingDirect(WebView webView) {
+        try {
+            // Calculate status bar height
+            int statusBarHeight = 0;
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+            }
+            
+            // Inject CSS with multiple strategies to ensure it works
+            String javascript = 
+                "(function() {" +
+                "  var statusBarHeight = " + statusBarHeight + ";" +
+                "  " +
+                "  // Remove any existing injected styles" +
+                "  var oldStyle = document.getElementById('statusbar-padding-fix');" +
+                "  if (oldStyle) oldStyle.remove();" +
+                "  " +
+                "  // Create new style element" +
+                "  var style = document.createElement('style');" +
+                "  style.id = 'statusbar-padding-fix';" +
+                "  style.innerHTML = '" +
+                "    * { " +
+                "      --status-bar-height: " + statusBarHeight + "px; " +
+                "    }" +
+                "    html { " +
+                "      padding-top: " + statusBarHeight + "px !important; " +
+                "      height: calc(100% - " + statusBarHeight + "px) !important; " +
+                "      box-sizing: border-box !important; " +
+                "    }" +
+                "    body { " +
+                "      margin-top: 0 !important; " +
+                "      position: relative !important; " +
+                "    }" +
+                "    body::before { " +
+                "      content: \\\"\\\" !important; " +
+                "      display: block !important; " +
+                "      height: 0 !important; " +
+                "      margin: 0 !important; " +
+                "    }" +
+                "  ';" +
+                "  " +
+                "  // Append to head or body" +
+                "  if (document.head) {" +
+                "    document.head.appendChild(style);" +
+                "  } else if (document.body) {" +
+                "    document.body.insertBefore(style, document.body.firstChild);" +
+                "  }" +
+                "  " +
+                "  console.log('[UPSI] Status bar padding injected: ' + statusBarHeight + 'px');" +
+                "  return true;" +
+                "})();";
+            
+            webView.evaluateJavascript(javascript, result -> {
+                android.util.Log.i("MainActivity", "Status bar padding injection result: " + result + " (" + statusBarHeight + "px)");
+            });
+            
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error in injectStatusBarPaddingDirect: " + e.getMessage());
+        }
     }
 
     private void setupOfflineErrorHandler() {
@@ -168,6 +271,8 @@ public class MainActivity extends BridgeActivity {
                             // Successfully loaded a real page
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
+                                // Re-inject padding after page load
+                                injectStatusBarPaddingDirect(view);
                             }
                             // Hide pull-to-refresh indicator
                             if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
