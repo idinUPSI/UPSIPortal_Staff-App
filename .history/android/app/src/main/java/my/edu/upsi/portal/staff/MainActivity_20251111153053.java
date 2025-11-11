@@ -3,22 +3,18 @@ package my.edu.upsi.portal.staff;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,138 +31,62 @@ public class MainActivity extends BridgeActivity {
     private boolean isShowingOfflinePage = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // BridgeActivity will inflate its default layout with WebView
-        // We'll add our custom header and banner programmatically as overlays
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         requestNotificationPermissionIfNeeded();
         setupNetworkMonitoring();
-        
-        // Delay UI setup to ensure WebView is ready
-        this.runOnUiThread(() -> {
-            this.postDelayed(() -> {
-                addCustomUI();
-                setupWebViewClient();
-            }, 300);
-        });
+        setupNativeUI();
     }
 
-    private void addCustomUI() {
-        try {
-            // Get the root view (FrameLayout from BridgeActivity)
-            ViewGroup rootView = (ViewGroup) findViewById(android.R.id.content);
-            if (rootView == null) return;
-            
-            // Create vertical container for header + banner
-            LinearLayout overlayContainer = new LinearLayout(this);
-            overlayContainer.setOrientation(LinearLayout.VERTICAL);
-            overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ));
-            
-            // Create header bar
-            LinearLayout headerBar = createHeaderBar();
-            overlayContainer.addView(headerBar);
-            
-            // Create offline banner
-            offlineBanner = createOfflineBanner();
-            overlayContainer.addView(offlineBanner);
-            
-            // Add overlay to root view
-            rootView.addView(overlayContainer);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    
-    private LinearLayout createHeaderBar() {
-        LinearLayout headerBar = new LinearLayout(this);
-        headerBar.setOrientation(LinearLayout.HORIZONTAL);
-        headerBar.setBackgroundColor(Color.parseColor("#663399"));
-        headerBar.setGravity(Gravity.CENTER_VERTICAL);
-        
-        int padding = dpToPx(12);
-        headerBar.setPadding(padding, padding, padding, padding);
-        headerBar.setLayoutParams(new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dpToPx(56)
-        ));
-        
-        // Title
-        TextView title = new TextView(this);
-        title.setText("MyUPSI Portal Staff");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f
-        );
-        title.setLayoutParams(titleParams);
-        headerBar.addView(title);
-        
-        // Refresh button
-        Button btnRefresh = new Button(this);
-        btnRefresh.setText("↻");
-        btnRefresh.setTextColor(Color.WHITE);
-        btnRefresh.setBackgroundColor(Color.TRANSPARENT);
-        btnRefresh.setAllCaps(false);
-        btnRefresh.setOnClickListener(v -> {
-            if (isNetworkAvailable()) {
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().reload();
+    private void setupNativeUI() {
+        // Use a handler to ensure views are ready
+        this.runOnUiThread(() -> {
+            try {
+                // Find views using resource IDs
+                int offlineBannerId = getResources().getIdentifier("offline_banner", "id", getPackageName());
+                int btnRefreshId = getResources().getIdentifier("btn_refresh", "id", getPackageName());
+                int btnHomeId = getResources().getIdentifier("btn_home", "id", getPackageName());
+
+                if (offlineBannerId != 0) {
+                    offlineBanner = findViewById(offlineBannerId);
                 }
-            } else {
-                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+
+                if (btnRefreshId != 0) {
+                    Button btnRefresh = findViewById(btnRefreshId);
+                    if (btnRefresh != null) {
+                        btnRefresh.setOnClickListener(v -> {
+                            if (isNetworkAvailable()) {
+                                if (getBridge() != null && getBridge().getWebView() != null) {
+                                    getBridge().getWebView().reload();
+                                }
+                            } else {
+                                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+                if (btnHomeId != 0) {
+                    Button btnHome = findViewById(btnHomeId);
+                    if (btnHome != null) {
+                        btnHome.setOnClickListener(v -> {
+                            if (isNetworkAvailable()) {
+                                if (getBridge() != null && getBridge().getWebView() != null) {
+                                    getBridge().getWebView().loadUrl(HOME_URL);
+                                }
+                            } else {
+                                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+                // Setup custom WebViewClient for error handling
+                setupWebViewClient();
+            } catch (Exception e) {
+                // Silently handle any initialization errors
             }
         });
-        headerBar.addView(btnRefresh);
-        
-        // Home button
-        Button btnHome = new Button(this);
-        btnHome.setText("⌂");
-        btnHome.setTextColor(Color.WHITE);
-        btnHome.setBackgroundColor(Color.TRANSPARENT);
-        btnHome.setAllCaps(false);
-        btnHome.setOnClickListener(v -> {
-            if (isNetworkAvailable()) {
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().loadUrl(HOME_URL);
-                }
-            } else {
-                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
-            }
-        });
-        headerBar.addView(btnHome);
-        
-        return headerBar;
-    }
-    
-    private TextView createOfflineBanner() {
-        TextView banner = new TextView(this);
-        banner.setText("Tiada sambungan internet");
-        banner.setTextColor(Color.WHITE);
-        banner.setBackgroundColor(Color.parseColor("#FF9800"));
-        banner.setGravity(Gravity.CENTER);
-        banner.setTextSize(14);
-        int padding = dpToPx(12);
-        banner.setPadding(padding, padding, padding, padding);
-        banner.setLayoutParams(new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        banner.setVisibility(View.GONE);
-        return banner;
-    }
-    
-    private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
     }
 
     private void setupWebViewClient() {
@@ -175,10 +95,23 @@ public class MainActivity extends BridgeActivity {
             
             // Enable JavaScript (required for offline page interaction)
             webView.getSettings().setJavaScriptEnabled(true);
-            webView.getSettings().setDomStorageEnabled(true);
             
             // Add JavaScript interface for retry button
-            webView.addJavascriptInterface(new WebAppInterface(), "AndroidInterface");
+            webView.addJavascriptInterface(new Object() {
+                @android.webkit.JavascriptInterface
+                public void retryConnection() {
+                    runOnUiThread(() -> {
+                        if (isNetworkAvailable()) {
+                            // Network is back, reload the portal
+                            webView.loadUrl(HOME_URL);
+                            Toast.makeText(MainActivity.this, "Cuba menyambung semula...", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Still no network
+                            Toast.makeText(MainActivity.this, "Masih tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }, "AndroidInterface");
             
             webView.setWebViewClient(new WebViewClient() {
                 @Override
@@ -332,24 +265,5 @@ public class MainActivity extends BridgeActivity {
         try {
             connectivityManager.registerNetworkCallback(request, networkCallback);
         } catch (Exception ignored) {}
-    }
-    
-    // JavaScript Interface for offline page
-    public class WebAppInterface {
-        @android.webkit.JavascriptInterface
-        public void retryConnection() {
-            runOnUiThread(() -> {
-                if (isNetworkAvailable()) {
-                    // Network is back, reload the portal
-                    if (getBridge() != null && getBridge().getWebView() != null) {
-                        getBridge().getWebView().loadUrl(HOME_URL);
-                        Toast.makeText(MainActivity.this, "Cuba menyambung semula...", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    // Still no network
-                    Toast.makeText(MainActivity.this, "Masih tiada sambungan internet", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
     }
 }

@@ -37,8 +37,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // BridgeActivity will inflate its default layout with WebView
-        // We'll add our custom header and banner programmatically as overlays
+        // Custom layout is already set by BridgeActivity from activity_main.xml
     }
 
     @Override
@@ -49,124 +48,47 @@ public class MainActivity extends BridgeActivity {
         
         // Delay UI setup to ensure WebView is ready
         this.runOnUiThread(() -> {
-            this.postDelayed(() -> {
-                addCustomUI();
-                setupWebViewClient();
-            }, 300);
+            this.postDelayed(() -> setupNativeUI(), 300);
         });
     }
 
-    private void addCustomUI() {
+    private void setupNativeUI() {
         try {
-            // Get the root view (FrameLayout from BridgeActivity)
-            ViewGroup rootView = (ViewGroup) findViewById(android.R.id.content);
-            if (rootView == null) return;
-            
-            // Create vertical container for header + banner
-            LinearLayout overlayContainer = new LinearLayout(this);
-            overlayContainer.setOrientation(LinearLayout.VERTICAL);
-            overlayContainer.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ));
-            
-            // Create header bar
-            LinearLayout headerBar = createHeaderBar();
-            overlayContainer.addView(headerBar);
-            
-            // Create offline banner
-            offlineBanner = createOfflineBanner();
-            overlayContainer.addView(offlineBanner);
-            
-            // Add overlay to root view
-            rootView.addView(overlayContainer);
-            
+            // Find views by ID directly (not using getIdentifier)
+            offlineBanner = findViewById(R.id.offline_banner);
+            Button btnRefresh = findViewById(R.id.btn_refresh);
+            Button btnHome = findViewById(R.id.btn_home);
+
+            if (btnRefresh != null) {
+                btnRefresh.setOnClickListener(v -> {
+                    if (isNetworkAvailable()) {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().reload();
+                        }
+                    } else {
+                        Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            if (btnHome != null) {
+                btnHome.setOnClickListener(v -> {
+                    if (isNetworkAvailable()) {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().loadUrl(HOME_URL);
+                        }
+                    } else {
+                        Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            // Setup custom WebViewClient for error handling
+            setupWebViewClient();
         } catch (Exception e) {
+            // Log error for debugging
             e.printStackTrace();
         }
-    }
-    
-    private LinearLayout createHeaderBar() {
-        LinearLayout headerBar = new LinearLayout(this);
-        headerBar.setOrientation(LinearLayout.HORIZONTAL);
-        headerBar.setBackgroundColor(Color.parseColor("#663399"));
-        headerBar.setGravity(Gravity.CENTER_VERTICAL);
-        
-        int padding = dpToPx(12);
-        headerBar.setPadding(padding, padding, padding, padding);
-        headerBar.setLayoutParams(new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dpToPx(56)
-        ));
-        
-        // Title
-        TextView title = new TextView(this);
-        title.setText("MyUPSI Portal Staff");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(18);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f
-        );
-        title.setLayoutParams(titleParams);
-        headerBar.addView(title);
-        
-        // Refresh button
-        Button btnRefresh = new Button(this);
-        btnRefresh.setText("↻");
-        btnRefresh.setTextColor(Color.WHITE);
-        btnRefresh.setBackgroundColor(Color.TRANSPARENT);
-        btnRefresh.setAllCaps(false);
-        btnRefresh.setOnClickListener(v -> {
-            if (isNetworkAvailable()) {
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().reload();
-                }
-            } else {
-                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
-            }
-        });
-        headerBar.addView(btnRefresh);
-        
-        // Home button
-        Button btnHome = new Button(this);
-        btnHome.setText("⌂");
-        btnHome.setTextColor(Color.WHITE);
-        btnHome.setBackgroundColor(Color.TRANSPARENT);
-        btnHome.setAllCaps(false);
-        btnHome.setOnClickListener(v -> {
-            if (isNetworkAvailable()) {
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().loadUrl(HOME_URL);
-                }
-            } else {
-                Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
-            }
-        });
-        headerBar.addView(btnHome);
-        
-        return headerBar;
-    }
-    
-    private TextView createOfflineBanner() {
-        TextView banner = new TextView(this);
-        banner.setText("Tiada sambungan internet");
-        banner.setTextColor(Color.WHITE);
-        banner.setBackgroundColor(Color.parseColor("#FF9800"));
-        banner.setGravity(Gravity.CENTER);
-        banner.setTextSize(14);
-        int padding = dpToPx(12);
-        banner.setPadding(padding, padding, padding, padding);
-        banner.setLayoutParams(new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        banner.setVisibility(View.GONE);
-        return banner;
-    }
-    
-    private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
     }
 
     private void setupWebViewClient() {
