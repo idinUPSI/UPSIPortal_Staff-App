@@ -3,13 +3,19 @@ const CACHE_NAME = 'upsi-portal-v1';
 const ALLOWED_ORIGINS = ['https://unistaff.upsi.edu.my'];
 
 // Cache essential files
-const ASSETS = [
+const urlsToCache = [
   '/',
   '/index.html',
     '/manifest.json',
     "/style.css",
 ];
 
+const ASSETS = [
+    "/",
+    "/index.html",
+    "/style.css",
+    "/manifest.json"
+  ];
 
 // Install event
 self.addEventListener('install', event => {
@@ -18,7 +24,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(ASSETS);
+        return cache.addAll(urlsToCache);
       })
       .catch(error => {
         console.error('Cache installation failed:', error);
