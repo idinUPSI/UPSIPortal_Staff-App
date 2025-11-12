@@ -22,31 +22,31 @@
         const style = document.createElement('style');
         style.id = 'upsi-mobile-css';
         style.textContent = `
+        
             /* PWA Safe Area Handling - Fix Status Bar Overlap (Portal Content Sahaja) */
-            :root {
-                --safe-area-inset-top: env(safe-area-inset-top, 5px);
+           /* :root {
+                --safe-area-inset-top: env(safe-area-inset-top, 0px);
                 --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
                 --safe-area-inset-left: env(safe-area-inset-left, 0px);
                 --safe-area-inset-right: env(safe-area-inset-right, 0px);
-            }
+            } */
             
             /* Fix untuk html element - hanya untuk portal */
-            html {
+           /* html {
                 padding-top: var(--safe-area-inset-top) !important;
                 padding-bottom: var(--safe-area-inset-bottom) !important;
                 padding-left: var(--safe-area-inset-left) !important;
                 padding-right: var(--safe-area-inset-right) !important;
-            }
-            
+            }*/
             /* Fix untuk body - prevent overlap dengan status bar */
             body {
-                margin-top: 0 !important;
+                /* margin-top: 0 !important; */
                 padding-top: var(--safe-area-inset-top) !important;
                 padding-bottom: var(--safe-area-inset-bottom) !important;
                 padding-left: var(--safe-area-inset-left) !important;
                 padding-right: var(--safe-area-inset-right) !important;
             }
-            
+           
             /* Fix untuk login page header container */
             .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
                 padding-top: 25px !important;
@@ -61,6 +61,14 @@
             /* Background color untuk dashboard page header */
             .page-header {
                 background-color: #4D2677 !important;
+            }
+            
+            .header-function-fixed:not(.nav-function-top) .page-content {
+                margin-top: 5rem;
+            }
+
+            .page-header .hidden-sm-up{
+                display: none !important;
             }
             
             /* Fix untuk fixed/sticky elements */
