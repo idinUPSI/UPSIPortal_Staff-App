@@ -171,7 +171,7 @@ public class MainActivity extends BridgeActivity {
                                         
                                         // Switch to cache mode
                                         WebSettings settings = view.getSettings();
-                                        WebSettings.CacheMode oldMode = settings.getCacheMode();
+                                        int oldMode = settings.getCacheMode();
                                         settings.setCacheMode(WebSettings.LOAD_CACHE_ONLY);
                                         
                                         // Try to reload from cache
@@ -499,14 +499,10 @@ public class MainActivity extends BridgeActivity {
                     // Use LOAD_CACHE_ELSE_NETWORK to prioritize cache but still allow network updates
                     settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                     
-                    // Enable cache storage (AppCache is deprecated but still works for older Android)
-                    // Modern Android uses HTTP cache automatically
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                        // AppCache only for Android 10 and below
-                        settings.setAppCacheEnabled(true);
-                        settings.setAppCachePath(getApplicationContext().getCacheDir().getAbsolutePath());
-                        settings.setAppCacheMaxSize(50 * 1024 * 1024); // 50MB cache
-                    }
+                    // Enable cache storage (AppCache is deprecated and removed in newer Android versions)
+                    // Modern Android uses HTTP cache automatically via WebView cache mode
+                    // AppCache methods are deprecated and may not be available in newer API levels
+                    // WebView's LOAD_CACHE_ELSE_NETWORK mode handles caching automatically
                     
                     settings.setDatabaseEnabled(true);
                     settings.setGeolocationEnabled(true);
