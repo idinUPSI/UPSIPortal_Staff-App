@@ -37,6 +37,8 @@
       /* Splash screen - no padding untuk logo centered */
       padding: 0;
       margin: 0;
+      /* Adjust untuk perfect center - compensate untuk status bar */
+      margin-top: -20px; /* Pull logo up sedikit untuk perfect center */
     }
     .logo {
       width: 120px; height: 120px;
@@ -76,11 +78,20 @@
   </style>
 </head>
 <body>
-  <div class="logo">
+  <div class="logo" id="splash-logo">
     <img src="assets/images/universiti-pendidikan-sultan-idris-small.png"
          alt="UPSI Logo"
          style="width:100px;height:100px;object-fit:contain;"
          onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI';">
+  </div>
+  
+  <!-- Debug button (hanya dalam development) -->
+  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <button onclick="window.location.href='debug.html'" 
+            style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; 
+                   padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+      🔧 Debug
+    </button>
   </div>
   <h1>MyUPSI Portal Staff</h1>
   <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>

@@ -47,7 +47,7 @@
                 padding-right: var(--safe-area-inset-right) !important;
             }
             
-            /* Fix untuk header elements - kurangkan padding untuk elak terlalu tinggi */
+            /* Fix untuk header elements - adjust untuk elak terlalu tinggi */
             .page-header, header, .header, [role="banner"], 
             .navbar, .top-bar, .site-header, .main-header,
             [class*="header"], [class*="Header"], [id*="header"], [id*="Header"],
@@ -55,8 +55,17 @@
                 position: relative !important;
                 top: 0 !important;
                 margin-top: 0 !important;
+                /* Kurangkan padding untuk elak terlalu tinggi - hanya safe area sahaja */
                 padding-top: var(--safe-area-inset-top) !important;
+                min-height: auto !important;
+                height: auto !important;
                 z-index: 1000 !important;
+            }
+            
+            /* Fix untuk white header bar yang terlalu tinggi */
+            .navbar, .top-bar, [class*="navbar"], [class*="top-bar"] {
+                padding-top: calc(var(--safe-area-inset-top) * 0.5) !important;
+                padding-bottom: 0.5rem !important;
             }
             
             /* Fix untuk fixed/sticky headers */
