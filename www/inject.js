@@ -19,10 +19,43 @@
             return;
         }
         
+        // Check if current URL is login page
+        const isLoginPage = currentUrl.includes('/login') || 
+                           currentUrl.includes('/auth') ||
+                           currentUrl.includes('login.php') ||
+                           currentUrl.includes('signin');
+        
         const style = document.createElement('style');
         style.id = 'upsi-mobile-css';
-        style.textContent = `
         
+        // CSS untuk hide panels - hanya untuk login page
+        const hideOtherPanelsCSS = isLoginPage ? `
+            /* ===== HIDE PANELS - SHOW LOGIN ONLY ===== */
+            /* Sembunyikan header/navigation sebelum login */
+            header, nav, .navbar, .page-header, .header {
+                display: none !important;
+            }
+            
+            /* Sembunyikan sidebar/menu */
+            aside, .sidebar, .page-sidebar, .nav-menu {
+                display: none !important;
+            }
+            
+            /* Sembunyikan footer sebelum login */
+            footer, .footer, .page-footer {
+                display: none !important;
+            }
+            
+            /* Hanya paparkan container login */
+            .login-container, .auth-container, [class*="login"], [id*="login"] {
+                display: block !important;
+                visibility: visible !important;
+            }
+        ` : '';
+        
+        style.textContent = `
+            ${hideOtherPanelsCSS}
+            
             /* PWA Safe Area Handling - Fix Status Bar Overlap (Portal Content Sahaja) */
            /* :root {
                 --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -103,4 +136,49 @@
             injectMobileCSS();
         }
     });
+    
+    // Function untuk show semua panel selepas login
+    function showAllPanels() {
+        const style = document.getElementById('upsi-mobile-css');
+        if (style) {
+            // Remove CSS rules yang hide panels
+            style.textContent = style.textContent.replace(
+                /\/\* ===== HIDE PANELS - SHOW LOGIN ONLY ===== \*\/[\s\S]*?\/\* PWA Safe Area Handling/,
+                '/* PWA Safe Area Handling'
+            );
+            console.log('All panels shown after login');
+        }
+    }
+    
+    // Detect login success dan show panels
+    // Method 1: Check URL change (portal biasanya redirect selepas login)
+    let lastUrl = location.href;
+    const urlObserver = new MutationObserver(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            // Jika URL berubah dari login page, show all panels
+            if (!url.includes('login') && !url.includes('auth')) {
+                setTimeout(showAllPanels, 100);
+            }
+        }
+    });
+    urlObserver.observe(document, { subtree: true, childList: true });
+    
+    // Method 2: Check for dashboard/home elements (indicate successful login)
+    const checkLoginSuccess = setInterval(() => {
+        const isDashboard = document.querySelector('.page-content, .dashboard, [class*="dashboard"]');
+        const isLoggedIn = document.querySelector('.user-profile, .logout, [class*="logout"]');
+        
+        if (isDashboard || isLoggedIn) {
+            showAllPanels();
+            clearInterval(checkLoginSuccess);
+        }
+    }, 1000);
+    
+    // Clear check after 30 seconds (prevent infinite checking)
+    setTimeout(() => clearInterval(checkLoginSuccess), 30000);
+    
+    // Expose function globally untuk manual trigger jika perlu
+    window.showAllPanels = showAllPanels;
 })();
