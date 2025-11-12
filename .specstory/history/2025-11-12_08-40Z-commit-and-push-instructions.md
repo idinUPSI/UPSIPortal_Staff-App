@@ -149,7 +149,7 @@ Nak saya commit dan push sekarang?
 
 ---
 
-_**User (2025-11-12 09:08Z)**_
+_**User (2025-11-12 09:09Z)**_
 
 ia commit dan push
 
@@ -157,7 +157,35 @@ ia commit dan push
 
 _**Agent (model copilot/auto)**_
 
+✅ **Selesai!** 
 
+Commit dan push berjaya:
+- **Commit**: `507ae64` - "test: comment out status bar code to debug white panel scroll issue"
+- **Pushed to**: `origin/main`
+
+**Apa yang telah dicommit:**
+1. `MainActivity.java` - Semua status bar code telah dicomment
+2. Files baru: ``, ``, `CARA_TEST_DAN_VERIFY.md`
+
+**GitHub Actions akan auto-build APK baru** (~5-10 minit). Bila siap:
+1. Download APK dari Actions artifacts
+2. Install dan test
+3. Report sama ada white panel masih ada atau tidak
+
+Jika white panel hilang = masalah dari code kita
+Jika white panel masih ada = masalah dari portal UPSI sendiri
+
+---
+
+_**User (2025-11-12 09:17Z)**_
+
+ada script apa-apa ke yang running semasa app ni di buka? sebab saya rasa sedikit sangkut, dan keybprad seperti tak fungsi
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Saya akan check scripts yang running bila app dibuka dan kemungkinan penyebab lag/keyboard issue. 
 
 ---
 
