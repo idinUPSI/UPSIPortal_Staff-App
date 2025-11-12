@@ -204,17 +204,7 @@
         console.log('Service Worker didaftarkan');
       });
     }
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const updateThemeColor = () => {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        metaThemeColor.setAttribute('content', '#121212');
-      } else {
-        metaThemeColor.setAttribute('content', '#f0f0f0');
-      }
-    };
-    updateThemeColor();
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
-  </script>
+
 
 
     </script>

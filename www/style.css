@@ -1,0 +1,61 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 🌈 Tema Light & Dark */
+:root {
+  --bg-color: #f5f5f5;
+  --text-color: #222;
+  --header-bg: #ffffff;
+  --footer-bg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;
+    --text-color: #eaeaea;
+    --header-bg: #1f1f1f;
+    --footer-bg: #1f1f1f;
+  }
+}
+
+/* 📱 Safe area untuk notch & status bar */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  background: var(--header-bg);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+/* Main content */
+main {
+  padding: 20px;
+}
+
+/* Footer */
+footer {
+  background: var(--footer-bg);
+  text-align: center;
+  padding: 14px;
+  font-size: 14px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  position: sticky;
+  bottom: 0;
+}

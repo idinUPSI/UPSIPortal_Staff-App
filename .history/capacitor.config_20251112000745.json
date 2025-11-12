@@ -1,0 +1,28 @@
+{
+  "appId": "my.edu.upsi.portal.staff",
+  "appName": "MyUPSI Portal Staff",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#663399",
+      "androidSplashResourceName": "splash",
+      "showSpinner": true,
+      "spinnerColor": "#FFFFFF"
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#663399",
+      "overlaysWebView": false
+    }
+  },
+  
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
