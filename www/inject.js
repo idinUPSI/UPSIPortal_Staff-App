@@ -24,7 +24,7 @@
         style.textContent = `
             /* PWA Safe Area Handling - Fix Status Bar Overlap (Portal Content Sahaja) */
             :root {
-                --safe-area-inset-top: env(safe-area-inset-top, 25px);
+                --safe-area-inset-top: env(safe-area-inset-top, 5px);
                 --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
                 --safe-area-inset-left: env(safe-area-inset-left, 0px);
                 --safe-area-inset-right: env(safe-area-inset-right, 0px);
@@ -47,26 +47,26 @@
                 padding-right: var(--safe-area-inset-right) !important;
             }
             
-            // /* Fix untuk login page header container */
-            // .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
-            //     padding-top: 25px !important;
-            // }
+            /* Fix untuk login page header container */
+            .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
+                padding-top: 25px !important;
+            }
             
-            // /* Fix untuk dashboard page header dan content */
-            // .page-header, .page-content {
-            //     padding-top: 30px !important;
-            //     height: auto !important;
-            // }
+            /* Fix untuk dashboard page header dan content */
+            .page-header, .page-content {
+                padding-top: 30px !important;
+                height: auto !important;
+            }
             
-            // /* Background color untuk dashboard page header */
-            // .page-header {
-            //     background-color: #4D2677 !important;
-            // }
+            /* Background color untuk dashboard page header */
+            .page-header {
+                background-color: #4D2677 !important;
+            }
             
             /* Fix untuk fixed/sticky elements */
             [style*="position: fixed"], [style*="position: sticky"] {
-                top: var(--safe-area-inset-top) !important;
-            }
+                 top: var(--safe-area-inset-top) !important;
+             }
             
             /* Fix untuk iframe/webview content */
             iframe, webview {

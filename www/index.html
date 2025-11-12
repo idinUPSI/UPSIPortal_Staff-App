@@ -43,7 +43,7 @@
       width: 120px; height: 120px;
      
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      /* margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); */
       font-size: 48px; font-weight: bold; color: #663399;
       overflow: hidden;
     }
@@ -80,18 +80,18 @@
   <div class="logo" id="splash-logo">
     <img src="assets/images/universiti-pendidikan-sultan-idris-small.png"
          alt="UPSI Logo"
-         style="width:100px;height:100px;object-fit:contain;"
+         style="width:100px;height:100px;"
          onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI';">
   </div>
   
   <!-- Debug button (hanya dalam development) -->
-  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+  <!-- <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
     <button onclick="window.location.href='debug.html'" 
             style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; 
                    padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
       🔧 Debug
     </button>
-  </div>
+  </div> -->
   <h1>MyUPSI Portal Staff</h1>
   <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
   <div class="spinner"></div>
