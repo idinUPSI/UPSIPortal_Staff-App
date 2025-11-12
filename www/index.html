@@ -158,38 +158,8 @@
     updateThemeColor();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
 
-    // Fix status bar overlap untuk portal content (selepas redirect)
-    function injectStatusBarFix() {
-      // Inject CSS untuk fix status bar overlap dalam portal - lebih agresif
-      const style = document.createElement('style');
-      style.id = 'status-bar-fix';
-      style.textContent = `
-       
-      `;
-      if (!document.getElementById('status-bar-fix')) {
-        document.head.appendChild(style);
-      }
-    }
-
-    // Inject fix selepas page load (untuk portal content)
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', injectStatusBarFix);
-    } else {
-      injectStatusBarFix();
-    }
-
-    // Re-inject selepas navigation (portal mungkin navigate secara dinamik)
-    // COMMENTED: This MutationObserver causes lag - monitors ALL DOM changes
-    /*
-    let lastUrl = location.href;
-    new MutationObserver(() => {
-      const url = location.href;
-      if (url !== lastUrl) {
-        lastUrl = url;
-        setTimeout(injectStatusBarFix, 100);
-      }
-    }).observe(document, { subtree: true, childList: true });
-    */
+    // Status bar fix is now handled by inject.js and MainActivity.java
+    // No need for empty function here that does nothing
   </script>
 </body>
 </html>
