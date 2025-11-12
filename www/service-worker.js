@@ -74,17 +74,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first strategy for all requests
+  // Note: Service Worker can only cache same-origin requests
+  // For cross-origin requests (like unistaff.upsi.edu.my), WebView cache is used instead
+  
+  // Network-first strategy for same-origin requests
   event.respondWith(
     fetch(request)
       .then((response) => {
         // Clone the response before caching
         const responseToCache = response.clone();
 
-        // Cache successful responses
-        if (response.status === 200) {
+        // Cache successful responses (only for same-origin)
+        if (response.status === 200 && response.type === 'basic') {
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
+            cache.put(request, responseToCache).catch(err => {
+              console.log('[ServiceWorker] Cache put failed (may be cross-origin):', request.url);
+            });
           });
         }
 
@@ -107,6 +112,7 @@ self.addEventListener('fetch', (event) => {
             }
 
             // For other requests, return error
+            // Note: For cross-origin requests, WebView will handle cache automatically
             throw error;
           });
       })

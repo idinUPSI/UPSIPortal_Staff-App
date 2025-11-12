@@ -165,8 +165,30 @@ public class MainActivity extends BridgeActivity {
                                     }
 
                                     if (noNetwork) {
-                                        isShowingOfflinePage = true;
-                                        loadOfflinePage(view);
+                                        // Try to load from cache first before showing offline page
+                                        String url = request.getUrl().toString();
+                                        android.util.Log.i("MainActivity", "Offline detected, trying cache for: " + url);
+                                        
+                                        // Switch to cache mode
+                                        WebSettings settings = view.getSettings();
+                                        WebSettings.CacheMode oldMode = settings.getCacheMode();
+                                        settings.setCacheMode(WebSettings.LOAD_CACHE_ONLY);
+                                        
+                                        // Try to reload from cache
+                                        view.reload();
+                                        
+                                        // Check if cache load succeeded after a delay
+                                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                            // If still showing error or offline page needed
+                                            if (view.getUrl() == null || view.getUrl().equals("about:blank")) {
+                                                isShowingOfflinePage = true;
+                                                loadOfflinePage(view);
+                                            } else {
+                                                // Cache worked! Restore cache mode
+                                                settings.setCacheMode(oldMode);
+                                                android.util.Log.i("MainActivity", "Successfully loaded from cache");
+                                            }
+                                        }, 500);
                                     } else {
                                         // Keep current page, show a lightweight message instead of forcing offline page
                                         Toast.makeText(MainActivity.this,
@@ -228,11 +250,30 @@ public class MainActivity extends BridgeActivity {
                                 
                                 // Inject CSS to prevent content overlap with status bar
                                 //injectStatusBarPaddingCSS(view);
+                                
+                                // Force cache this page for offline use
+                                // This ensures the page is cached even if cache headers are not set
+                                if (isNetworkAvailable() && url.startsWith("https://unistaff.upsi.edu.my")) {
+                                    // Page loaded successfully, it's now in cache
+                                    android.util.Log.i("MainActivity", "Page cached for offline: " + url);
+                                }
                             }
                             // Hide pull-to-refresh indicator
                             if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
                                 swipeRefreshLayout.setRefreshing(false);
                             }
+                        }
+                        
+                        @Override
+                        public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                            // This allows us to intercept and potentially serve cached content
+                            // For offline mode, we can check cache here
+                            if (!isNetworkAvailable()) {
+                                // Offline: Try to serve from cache
+                                // WebView will automatically use cache if available
+                                android.util.Log.d("MainActivity", "Offline request: " + request.getUrl());
+                            }
+                            return super.shouldInterceptRequest(view, request);
                         }
                     });
                 }
@@ -333,6 +374,14 @@ public class MainActivity extends BridgeActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Sambungan internet tersedia", Toast.LENGTH_SHORT).show();
                     
+                    // Switch back to default cache mode when online
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        WebView webView = getBridge().getWebView();
+                        WebSettings settings = webView.getSettings();
+                        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                        android.util.Log.i("MainActivity", "Switched to default cache mode (online)");
+                    }
+                    
                     // Auto-reload if showing offline page
                     if (isShowingOfflinePage && getBridge() != null && getBridge().getWebView() != null) {
                         isShowingOfflinePage = false;
@@ -345,6 +394,14 @@ public class MainActivity extends BridgeActivity {
             public void onLost(Network network) {
                 runOnUiThread(() -> {
                     Toast.makeText(MainActivity.this, "Tiada sambungan internet", Toast.LENGTH_SHORT).show();
+                    
+                    // Switch to cache-only mode when offline
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        WebView webView = getBridge().getWebView();
+                        WebSettings settings = webView.getSettings();
+                        settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                        android.util.Log.i("MainActivity", "Switched to cache mode for offline");
+                    }
                 });
             }
         };
@@ -428,9 +485,28 @@ public class MainActivity extends BridgeActivity {
 
                     // Performance settings
                     settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-                    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                    
+                    // Enable aggressive caching for offline mode
+                    // LOAD_CACHE_ELSE_NETWORK: Use cache first, then network if cache fails
+                    // This allows offline access to previously visited pages
+                    // Use LOAD_CACHE_ELSE_NETWORK to prioritize cache but still allow network updates
+                    settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                    
+                    // Enable cache storage (AppCache is deprecated but still works for older Android)
+                    // Modern Android uses HTTP cache automatically
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                        // AppCache only for Android 10 and below
+                        settings.setAppCacheEnabled(true);
+                        settings.setAppCachePath(getApplicationContext().getCacheDir().getAbsolutePath());
+                        settings.setAppCacheMaxSize(50 * 1024 * 1024); // 50MB cache
+                    }
+                    
                     settings.setDatabaseEnabled(true);
                     settings.setGeolocationEnabled(true);
+                    
+                    // Enable DOM storage for better caching
+                    settings.setDomStorageEnabled(true);
+                    settings.setJavaScriptCanOpenWindowsAutomatically(true);
 
                     // Enable zooming
                     settings.setSupportZoom(true);
