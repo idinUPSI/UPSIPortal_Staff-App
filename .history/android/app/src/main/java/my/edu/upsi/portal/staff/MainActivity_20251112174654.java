@@ -301,10 +301,10 @@ public class MainActivity extends BridgeActivity {
                 "  document.head.appendChild(existing);" +
                 "}" +
                 "existing.textContent = `" +
-                // "html, body { padding-top: env(safe-area-inset-top, 39px) !important; margin-top: 0 !important; --background-color: rgba(255, 255, 255, 0);}" +
-                // ".container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {" +
-                // "  padding-top: 25px !important;" +
-                // "}" +
+                "html, body { padding-top: env(safe-area-inset-top, 39px) !important; margin-top: 0 !important; --background-color: rgba(255, 255, 255, 0);}" +
+                ".container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {" +
+                "  padding-top: 25px !important;" +
+                "}" +
                 ".page-header, .page-content {" +
                 "  padding-top: 30px !important;" +
                 "  height: auto !important;" +
