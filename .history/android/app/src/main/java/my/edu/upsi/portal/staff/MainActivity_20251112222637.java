@@ -298,12 +298,6 @@ public class MainActivity extends BridgeActivity {
                 ".page-header .hidden-sm-up, .search {" +
                 "  display: none !important;" +
                 "}" +
-                ".page-logo {" +
-                "  top: 2.5rem !important;" +
-                "}" +
-                "#js-primary-nav {" +
-                "  top: 3rem !important;" +
-                "}" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +
                 "})();";

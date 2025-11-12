@@ -158,38 +158,58 @@ public class MainActivity extends BridgeActivity {
                                 runOnUiThread(() -> {
                                     boolean noNetwork = !isNetworkAvailable();
 
-                                    // Log error for diagnostics only (not shown to user)
+                                    // Log error details for diagnostics
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        android.util.Log.e("MainActivity", "Main frame error: " + error.getErrorCode());
+                                        String errorMsg = "onReceivedError (main frame): code=" + error.getErrorCode() + ", desc=" + error.getDescription();
+                                        android.util.Log.e("MainActivity", errorMsg);
                                     }
 
                                     if (noNetwork) {
-                                        // Directly show offline page - don't attempt cache reload
-                                        // to avoid multiple reloads and better UX
-                                        isShowingOfflinePage = true;
-                                        loadOfflinePage(view);
+                                        // Try to load from cache first before showing offline page
+                                        String url = request.getUrl().toString();
+                                        android.util.Log.i("MainActivity", "Offline detected, trying cache for: " + url);
+                                        
+                                        // Switch to cache mode
+                                        WebSettings settings = view.getSettings();
+                                        int oldMode = settings.getCacheMode();
+                                        settings.setCacheMode(WebSettings.LOAD_CACHE_ONLY);
+                                        
+                                        // Try to reload from cache
+                                        view.reload();
+                                        
+                                        // Check if cache load succeeded after a delay
+                                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                            // If still showing error or offline page needed
+                                            if (view.getUrl() == null || view.getUrl().equals("about:blank")) {
+                                                isShowingOfflinePage = true;
+                                                loadOfflinePage(view);
+                                            } else {
+                                                // Cache worked! Restore cache mode
+                                                settings.setCacheMode(oldMode);
+                                                android.util.Log.i("MainActivity", "Successfully loaded from cache");
+                                            }
+                                        }, 500);
                                     } else {
-                                        // Network available but page failed - show friendly message
-                                        // Don't show error code to user
+                                        // Keep current page, show a lightweight message instead of forcing offline page
                                         Toast.makeText(MainActivity.this,
-                                                "Ralat memuat halaman. Sila semak sambungan anda.",
+                                                "Ralat memuat halaman. Cuba lagi.",
                                                 Toast.LENGTH_SHORT).show();
                                     }
                                 });
-                                // Stop default error page
+                                // Stop default handling for main-frame
                                 return;
                             }
-                            // For subresource errors (images, scripts), ignore silently
-                            // Don't call super to prevent error messages
+                            // For subresource errors, let default handling proceed
+                            super.onReceivedError(view, request, error);
                         }
 
                         @Override
                         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                            // Log SSL error for debugging only (not shown to user)
-                            android.util.Log.e("MainActivity", "SSL Error occurred");
+                            // Log SSL error for debugging
+                            android.util.Log.e("MainActivity", "SSL Error: " + error.toString());
 
-                            // In debug builds, allow proceed for testing
-                            // In release builds, cancel with user-friendly message
+                            // In debug builds (app debuggable), allow proceed to ease testing
+                            // In release builds, cancel but DO NOT force offline page
                             try {
                                 boolean isDebuggable = (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
                                 if (isDebuggable) {
@@ -198,13 +218,14 @@ public class MainActivity extends BridgeActivity {
                                     handler.cancel();
                                     runOnUiThread(() -> Toast.makeText(
                                             MainActivity.this,
-                                            "Sambungan tidak selamat. Sila cuba sebentar lagi.",
-                                            Toast.LENGTH_SHORT
+                                            "Ralat keselamatan SSL. Sila hubungi pentadbir sistem.",
+                                            Toast.LENGTH_LONG
                                     ).show());
                                 }
                             } catch (Exception ex) {
                                 handler.cancel();
                             }
+                            // Don't load offline page here to avoid false offline state
                         }
 
                         @Override
@@ -214,9 +235,9 @@ public class MainActivity extends BridgeActivity {
                             if (!url.startsWith("data:") && !url.equals("about:blank")) {
                                 isShowingOfflinePage = false;
                             }
-                            // Show pull-to-refresh indicator if not already showing
-                            if (swipeRefreshLayout != null && !swipeRefreshLayout.isRefreshing()) {
-                                swipeRefreshLayout.setRefreshing(true);
+                            // Hide pull-to-refresh indicator if showing
+                            if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                                swipeRefreshLayout.setRefreshing(false);
                             }
                         }
 
@@ -285,24 +306,15 @@ public class MainActivity extends BridgeActivity {
                 // "  padding-top: 25px !important;" +
                 // "}" +
                 ".page-header, .page-content {" +
-                "  padding-top: 2.5rem !important;" +
+                "  padding-top: 40px !important;" +
                 "  height: auto !important;" +
                 "}" +
-                ".page-content {" +
-                "  padding-top: 3.5rem !important;" +
+                ".page-header {" +
+                " padding-top: 40px !important;" +
+                "  background-color: #4D2677 !important;" +
                 "}" +
-                ".header {" +
-                "  padding-top: 2.5rem !important;" +
-                "  height: auto !important;" +
-                "}" +
-                ".page-header .hidden-sm-up, .search {" +
+                ".page-header .hidden-sm-up {" +
                 "  display: none !important;" +
-                "}" +
-                ".page-logo {" +
-                "  top: 2.5rem !important;" +
-                "}" +
-                "#js-primary-nav {" +
-                "  top: 3rem !important;" +
                 "}" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +

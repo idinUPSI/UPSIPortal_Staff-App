@@ -285,24 +285,15 @@ public class MainActivity extends BridgeActivity {
                 // "  padding-top: 25px !important;" +
                 // "}" +
                 ".page-header, .page-content {" +
-                "  padding-top: 2.5rem !important;" +
+                "  padding-top: 40px !important;" +
                 "  height: auto !important;" +
                 "}" +
-                ".page-content {" +
-                "  padding-top: 3.5rem !important;" +
+                ".page-header {" +
+                " padding-top: 40px !important;" +
+                "  background-color: #4D2677 !important;" +
                 "}" +
-                ".header {" +
-                "  padding-top: 2.5rem !important;" +
-                "  height: auto !important;" +
-                "}" +
-                ".page-header .hidden-sm-up, .search {" +
+                ".page-header .hidden-sm-up {" +
                 "  display: none !important;" +
-                "}" +
-                ".page-logo {" +
-                "  top: 2.5rem !important;" +
-                "}" +
-                "#js-primary-nav {" +
-                "  top: 3rem !important;" +
                 "}" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +

@@ -560,7 +560,7 @@ Padding 39px ni yang create ruang putih di atas portal.
 
 ---
 
-_**User (2025-11-12 12:51Z)**_
+_**User (2025-11-12 12:54Z)**_
 
 ok baik. saya komen dulu. anda commit push. saya ingin cuba
 
@@ -568,6 +568,260 @@ ok baik. saya komen dulu. anda commit push. saya ingin cuba
 
 _**Agent (model copilot/auto)**_
 
+Baik, saya tengok ada perubahan dalam file `MainActivity.java`. Code yang terlibat dengan white panel (line 304-306) telah dicomment. Sekarang saya akan commit dan push perubahan ini. ✅ Selesai! Commit `883fa61` pushed.
+
+**Perubahan yang dicommit:**
+- Line 304-306 dalam `MainActivity.java` telah dicomment (CSS padding yang mungkin menyebabkan white panel)
+
+GitHub Actions akan build APK baru. Bila siap, cuba install dan test sama ada white panel masih follow scroll atau tidak.
+
+---
+
+_**User (2025-11-12 12:54Z)**_
+
+ "background_color": "#ffffff" ini ada terlibat atau tak?
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Bagus! Anda jumpa satu lagi tempat yang ada white color. Mari saya check:
+
+**`manifest.json` line 7: `"background_color": "#ffffff"`**
+
+Ini **TIDAK terlibat** dengan white panel yang follow scroll dalam app Android. Sebabnya:
+
+1. **`manifest.json` untuk PWA sahaja** - File ni untuk Progressive Web App (bila buka dalam browser), bukan untuk Android app native
+2. **`background_color` dalam manifest.json** - Ini warna background semasa splash screen PWA loading, bukan warna content portal
+3. **Android app ignore manifest.json** - App Android guna `MainActivity.java` dan native Android configuration, bukan file manifest.json ni
+
+**White panel yang follow scroll datang dari:**
+- ✅ **`MainActivity.java` line 304** - CSS injection `"html, body { padding-top: env(safe-area-inset-top, 39px) ...}"` ← **INI PUNCA** (dah anda comment tadi)
+- ❌ **BUKAN** dari `manifest.json` background_color
+- ❌ **BUKAN** dari `style.css` (untuk splash screen sahaja)
+
+Jadi `manifest.json` ni aman, tak perlu tukar. White panel issue sepatutnya solved bila anda test build yang baru (commit 883fa61) sebab padding CSS dah dicomment.
+
+---
+
+_**User (2025-11-12 14:23Z)**_
+
+bagaimana cara connection internet dikesan??
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Baik, saya explain bagaimana connection internet dikesan dalam app ni:
+
+## 🌐 **Cara Internet Connection Dikesan:**
+
+### **1. Method `isNetworkAvailable()` - Line 365-387**
+Check sama ada device ada sambungan internet atau tidak:
+
+```java
+private boolean isNetworkAvailable() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  // Android 6+
+        Network network = connectivityManager.getActiveNetwork();
+        NetworkCapabilities caps = connectivityManager.getNetworkCapabilities(network);
+        
+        // Check ada INTERNET capability
+        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+            return true;
+        }
+        
+        // Check jenis sambungan: WiFi, Cellular, atau Ethernet
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+            || caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+            || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+    } else {  // Android 5 dan bawah
+        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+        return info != null && info.isConnected();
+    }
+}
+```
+
+### **2. Method `setupNetworkMonitoring()` - Line 402-451**
+Monitor perubahan sambungan secara **real-time** menggunakan **NetworkCallback**:
+
+```java
+private void setupNetworkMonitoring() {
+    // Register callback untuk monitor network changes
+    networkCallback = new ConnectivityManager.NetworkCallback() {
+        
+        @Override
+        public void onAvailable(Network network) {
+            // ✅ DIPANGGIL bila internet TERSEDIA
+            Toast.makeText("Sambungan internet tersedia");
+            // Switch ke LOAD_DEFAULT mode
+            // Auto-reload jika tengah show offline page
+        }
+
+        @Override
+        public void onLost(Network network) {
+            // ❌ DIPANGGIL bila internet HILANG
+            Toast.makeText("Tiada sambungan internet");
+            // Switch ke LOAD_CACHE_ELSE_NETWORK mode
+        }
+    };
+    
+    connectivityManager.registerNetworkCallback(request, networkCallback);
+}
+```
+
+### **3. Bila Callback Dipanggil:**
+
+**`onAvailable()` triggered bila:**
+- WiFi connect
+- Mobile data ON
+- Ethernet cable plug in
+- VPN connect
+
+**`onLost()` triggered bila:**
+- WiFi disconnect
+- Mobile data OFF
+- Airplane mode ON
+- Signal lost
+
+### **4. Flow Lengkap:**
+
+```
+App Start
+   ↓
+onCreate() → setupStatusBar()
+   ↓
+onStart() → setupNetworkMonitoring()  ← Register NetworkCallback
+   ↓
+┌──────────────────────────┐
+│ NetworkCallback Active   │
+│ Monitor terus-menerus    │
+└──────────────────────────┘
+         ↓          ↓
+    onAvailable  onLost
+    (Online)    (Offline)
+```
+
+### **5. Bila Check Manual:**
+Method `isNetworkAvailable()` dipanggil secara manual dalam:
+- `setupOfflineErrorHandler()` - Check error page
+- `WebAppInterface.retryConnection()` - Bila user click "Cuba Lagi"
+- `setupPullToRefresh()` - Bila user pull-to-refresh
+
+**Kesimpulan:** App guna 2 cara - **automatic monitoring** (NetworkCallback) dan **manual check** (isNetworkAvailable()).
+
+---
+
+_**User (2025-11-12 14:24Z)**_
+
+anda rasa ada cara lebih bagus dari ini? dan jngan sampai error code terpapar di app
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Ya, ada beberapa improvement yang boleh dibuat untuk elakkan error code terpapar dan improve user experience:
+
+## **Masalah Semasa:**
+1. ❌ Error details might leak (error code, description)
+2. ❌ SSL error message terlalu technical
+3. ❌ Cache retry logic boleh sebabkan multiple reload
+4. ❌ Tiada progress indicator bila loading
+
+## **Penambahbaikan:** 
+```
+
+```
+Selesai! Saya telah improve error handling dengan:
+
+## **✅ Penambahbaikan Yang Dibuat:**
+
+### **1. Elakkan Error Code Terpapar:**
+- ❌ Buang: `"code=" + error.getErrorCode() + ", desc=" + error.getDescription()`
+- ✅ Ganti: Log simple tanpa details untuk user
+
+### **2. User-Friendly Messages:**
+- ❌ Buang: "Ralat keselamatan SSL. Sila hubungi pentadbir sistem." (terlalu technical)
+- ✅ Ganti: "Sambungan tidak selamat. Sila cuba sebentar lagi." (lebih mesra)
+
+### **3. Improve Cache Handling:**
+- ❌ Buang: Cache retry logic yang complex (multiple reload)
+- ✅ Ganti: Terus show offline page bila tiada internet (lebih cepat)
+
+### **4. Better Loading Indicator:**
+- ✅ Show loading indicator bila page start loading
+- ✅ Hide bila page finish loading
+- Better user feedback
+
+### **5. Silent Subresource Errors:**
+- Ignore error untuk images/scripts yang gagal load
+- Elakkan error message yang tidak perlu
+
+**Result:** App akan lebih clean, tiada technical error code terpapar, dan better UX dengan loading states.
+
+---
+
+_**User (2025-11-12 14:26Z)**_
+
+kemaskini kan css ini dalam inject status.
+
+.page-header, .page-content{
+                 padding-top: 2.5rem !important;
+                 height: auto !important;
+                }
+               
+                .page-content{
+                	padding-top: 3.5rem !important;
+                }
+                
+                .header{
+                 padding-top: 2.5rem !important;
+                 height: auto !important;
+                }
+                .page-header .hidden-sm-up, .search {
+                  display: none !important;
+                } 
+
+---
+
+_**Agent (model copilot/auto)**_
+
+
+```
+
+```
+Selesai! CSS dalam `injectStatusBarFixCSS()` telah dikemaskini dengan:
+
+**Perubahan:**
+- ✅ `.page-header, .page-content` → padding `2.5rem` (40px → 2.5rem)
+- ✅ `.page-content` → padding lebih besar `3.5rem` untuk content area
+- ✅ `.header` → tambah padding `2.5rem`
+- ✅ `.page-header .hidden-sm-up, .search` → hide both elements
+- ❌ Buang `.page-header` background color (sebab duplicate dengan `.page-header, .page-content`)
+
+CSS injection sekarang lebih clean dan follow design yang anda minta.
+
+---
+
+_**User (2025-11-12 14:35Z)**_
+
+tambah ini.
+
+.page-logo, {
+    top : 2.5rem !important;
+}
+
+#js-primary-nav{
+    top : 3rem  !important;
+}
+
+---
+
+_**Agent (model copilot/auto)**_
+
+
+```
+
+```
 
 
 ---
