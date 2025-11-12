@@ -337,6 +337,34 @@ public class MainActivity extends BridgeActivity {
                 "window.__upsiFocusHandlerAttached = true;" +
                 "})();";
             view.evaluateJavascript(focusJs, null);
+
+            // Ensure Backspace works in inputs even if site-level handlers block it
+            String backspaceFix = "(function(){" +
+                "if(window.__upsiBackspaceFixAttached) return;" +
+                "function isEditable(el){" +
+                "  if(!el) return false;" +
+                "  var tag = (el.tagName||'').toUpperCase();" +
+                "  if(tag==='TEXTAREA') return !el.readOnly && !el.disabled;" +
+                "  if(tag==='INPUT'){ var t=(el.type||'').toLowerCase(); return ['text','search','url','tel','email','password','number','date','datetime-local','time','month','week'].indexOf(t)>=0 && !el.readOnly && !el.disabled; }" +
+                "  if(el.isContentEditable) return true;" +
+                "  return false;" +
+                "}" +
+                "document.addEventListener('keydown', function(e){" +
+                "  var k = e.key || ''; var code = e.keyCode || 0;" +
+                "  if((k==='Backspace' || code===8) && isEditable(e.target)){" +
+                "    try{ e.stopImmediatePropagation(); /* don't preventDefault: let browser delete */ }catch(_){}" +
+                "  }" +
+                "}, true);" +
+                "// Fallback manual delete if needed via beforeinput (rare)" +
+                "document.addEventListener('beforeinput', function(e){" +
+                "  if(e.inputType==='deleteContentBackward' && isEditable(e.target)){" +
+                "    // allow default; but ensure propagation doesn't get blocked elsewhere" +
+                "    try{ e.stopPropagation(); }catch(_){}" +
+                "  }" +
+                "}, true);" +
+                "window.__upsiBackspaceFixAttached = true;" +
+                "})();";
+            view.evaluateJavascript(backspaceFix, null);
     }
     
     private void loadOfflinePage(WebView view) {
