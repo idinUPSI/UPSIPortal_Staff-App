@@ -301,21 +301,21 @@ public class MainActivity extends BridgeActivity {
                 "  document.head.appendChild(existing);" +
                 "}" +
                 "existing.textContent = `" +
-                "html, body { padding-top: env(safe-area-inset-top, 24px) !important; margin-top: 0 !important; }" +
+                "html, body { padding-top: env(safe-area-inset-top, 39px) !important; margin-top: 0 !important; }" +
                 "header, .header, [role='banner'], .navbar, .top-bar, .site-header, .main-header," +
                 "[class*='header'], [class*='Header'], [id*='header'], [id*='Header'], nav[class*='navbar'] {" +
                 "  position: relative !important; top: 0 !important; margin-top: 0 !important;" +
-                "  padding-top: env(safe-area-inset-top, 24px) !important; min-height: auto !important; height: auto !important; z-index: 1000 !important;" +
+                "  padding-top: env(safe-area-inset-top, 39px) !important; min-height: auto !important; height: auto !important; z-index: 1000 !important;" +
                 "}" +
                 ".navbar, .top-bar, [class*='navbar'], [class*='top-bar'] {" +
-                "  padding-top: calc(env(safe-area-inset-top, 24px) * 0.5) !important; padding-bottom: 0.5rem !important;" +
+                "  padding-top: calc(env(safe-area-inset-top, 39px) * 0.5) !important; padding-bottom: 0.5rem !important;" +
                 "}" +
                 "header[style*='fixed'], header[style*='sticky'], .header[style*='fixed'], .header[style*='sticky']," +
                 ".navbar[style*='fixed'], .navbar[style*='sticky'] {" +
-                "  top: env(safe-area-inset-top, 24px) !important; padding-top: 0 !important;" +
+                "  top: env(safe-area-inset-top, 39px) !important; padding-top: 0 !important;" +
                 "}" +
                 ".container, .container-fluid, main, .main-content, .content, #content {" +
-                "  padding-top: env(safe-area-inset-top, 24px) !important;" +
+                "  padding-top: env(safe-area-inset-top, 39px) !important;" +
                 "}" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +

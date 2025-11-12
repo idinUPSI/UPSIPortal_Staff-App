@@ -24,7 +24,7 @@
         style.textContent = `
             /* PWA Safe Area Handling - Fix Status Bar Overlap (Portal Content Sahaja) */
             :root {
-                --safe-area-inset-top: env(safe-area-inset-top, 24px);
+                --safe-area-inset-top: env(safe-area-inset-top, 39px);
                 --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
                 --safe-area-inset-left: env(safe-area-inset-left, 0px);
                 --safe-area-inset-right: env(safe-area-inset-right, 0px);
