@@ -435,3 +435,43 @@ Jadi nak saya modify line 303 dalam `MainActivity.java` tu atau tidak?
 
 ---
 
+_**User (2025-11-12 09:33Z)**_
+
+commit
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Selesai. Commit c63fae8 pushed.
+
+---
+
+_**User (2025-11-12 09:39Z)**_
+
+keyborad masih tak fungsi sepenuhnya
+
+---
+
+_**Agent (model copilot/auto)**_
+
+Issue keyboard tak fungsi sepenuhnya kemungkinan disebabkan:
+
+1. **Missing `windowSoftInputMode`** dalam `AndroidManifest.xml`
+2. **WebView settings** mungkin perlu tambahan 
+```
+
+```
+
+```
+
+```
+Selesai. Tambah:
+
+1. **`AndroidManifest.xml`** - `android:windowSoftInputMode="adjustResize"` supaya layout adjust bila keyboard muncul
+2. **`MainActivity.java`** - Set WebView focusable dan request focus untuk input field
+
+Test dan beritahu hasilnya.
+
+---
+

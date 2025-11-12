@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+
+  <!-- Theme color adaptif -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0f0f0">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="manifest" href="manifest.json" />
+  <!-- <link rel="stylesheet" href="style.css" /> -->
+  <script src="inject.js"></script>
+
+  <title>MyUPSI Portal Staff</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      /* Splash screen - no padding untuk logo centered */
+      padding: 0;
+      margin: 0;
+      height: 100%;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #663399 0%, #4D2677 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      /* Splash screen - no padding untuk logo centered */
+      padding: 0;
+      margin: 0;
+      /* Jangan tambah margin-top - akan menyebabkan logo terke atas sangat */
+    }
+    .header { 
+      --background-color: rgba(255, 255, 255, 0);
+    }
+    .logo {
+      width: 120px; height: 120px;
+     
+      display: flex; align-items: center; justify-content: center;
+      /* margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); */
+      font-size: 48px; font-weight: bold; color: #663399;
+      overflow: hidden;
+    }
+    h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; text-align: center; }
+    .subtitle { font-size: 16px; opacity: 0.9; margin-bottom: 32px; text-align: center; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { margin-top: 24px; font-size: 14px; opacity: 0.8; }
+    .offline-msg {
+      background: rgba(255, 193, 7, 0.2);
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .retry-btn {
+      background: #663399;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo" id="splash-logo">
+    <img src="assets/images/universiti-pendidikan-sultan-idris-small.png"
+         alt="UPSI Logo"
+         style="width:100px;height:100px;"
+         onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI';">
+  </div>
+  
+  <!-- Debug button (hanya dalam development) -->
+  <!-- <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <button onclick="window.location.href='debug.html'" 
+            style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; 
+                   padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+      🔧 Debug
+    </button>
+  </div> -->
+  <h1>MyUPSI Portal Staff</h1>
+  <div class="subtitle">Portal Universiti Pendidikan Sultan Idris</div>
+  <div class="spinner"></div>
+  <div class="status" id="status">Memuatkan...</div>
+
+  <script>
+    const PORTAL_URL = 'https://unistaff.upsi.edu.my';
+    let redirectAttempted = false;
+
+    function checkConnection() {
+      return fetch(PORTAL_URL, { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' })
+        .then(() => true)
+        .catch(() => false);
+    }
+
+    function showOfflineMessage() {
+      document.getElementById('status').innerHTML = `
+        <div class="offline-msg">
+          ⚠️ Tiada sambungan internet<br>
+          Sila sambung ke internet untuk akses Portal UPSI
+          <br><button class="retry-btn" onclick="attemptRedirect()">Cuba Lagi</button>
+        </div>`;
+    }
+
+    function attemptRedirect() {
+      if (redirectAttempted) return;
+      redirectAttempted = true;
+      document.getElementById('status').textContent = 'Memeriksa sambungan...';
+      checkConnection().then(isOnline => {
+        if (isOnline) {
+          document.getElementById('status').textContent = 'Menyambung ke portal...';
+          setTimeout(() => window.location.replace(PORTAL_URL), 800);
+        } else {
+          redirectAttempted = false;
+          showOfflineMessage();
+        }
+      });
+    }
+
+    // Auto redirect selepas 2 saat
+    setTimeout(() => attemptRedirect(), 2000);
+
+    // Backup redirect jika gagal
+    setTimeout(() => {
+      if (!redirectAttempted) window.location.replace(PORTAL_URL);
+    }, 10000);
+
+    // Daftar service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker didaftarkan'))
+        .catch(err => console.log('SW gagal:', err));
+    }
+
+    // Tema dinamik ikut mode sistem
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const updateThemeColor = () => {
+      metaThemeColor.setAttribute('content',
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? '#121212' : '#f0f0f0');
+    };
+    updateThemeColor();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
+
+    // Fix status bar overlap untuk portal content (selepas redirect)
+    function injectStatusBarFix() {
+      // Inject CSS untuk fix status bar overlap dalam portal - lebih agresif
+      const style = document.createElement('style');
+      style.id = 'status-bar-fix';
+      style.textContent = `
+       
+      `;
+      if (!document.getElementById('status-bar-fix')) {
+        document.head.appendChild(style);
+      }
+    }
+
+    // Inject fix selepas page load (untuk portal content)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', injectStatusBarFix);
+    } else {
+      injectStatusBarFix();
+    }
+
+    // Re-inject selepas navigation (portal mungkin navigate secara dinamik)
+    // COMMENTED: This MutationObserver causes lag - monitors ALL DOM changes
+    /*
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+      const url = location.href;
+      if (url !== lastUrl) {
+        lastUrl = url;
+        setTimeout(injectStatusBarFix, 100);
+      }
+    }).observe(document, { subtree: true, childList: true });
+    */
+  </script>
+</body>
+</html>
