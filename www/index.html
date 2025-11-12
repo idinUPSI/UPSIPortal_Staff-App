@@ -14,21 +14,33 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  <script src="inject.js"></script>
 
   <title>MyUPSI Portal Staff</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      /* Prevent status bar overlap */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #663399 0%, #4D2677 100%);
       min-height: 100vh;
+      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       color: white;
-      padding-top: env(safe-area-inset-top);
+      /* Additional padding untuk status bar */
+      padding-top: max(env(safe-area-inset-top), 24px);
       padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
     .logo {
       width: 120px; height: 120px;
@@ -123,7 +135,7 @@
 
     // Daftar service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
+      navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log('Service Worker didaftarkan'))
         .catch(err => console.log('SW gagal:', err));
     }
@@ -136,6 +148,53 @@
     };
     updateThemeColor();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
+
+    // Fix status bar overlap untuk portal content (selepas redirect)
+    function injectStatusBarFix() {
+      // Inject CSS untuk fix status bar overlap dalam portal
+      const style = document.createElement('style');
+      style.id = 'status-bar-fix';
+      style.textContent = `
+        /* Fix status bar overlap untuk portal UPSI */
+        html, body {
+          padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
+          margin-top: 0 !important;
+        }
+        body > *:first-child {
+          margin-top: 0 !important;
+          padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
+        }
+        header, .header, [role="banner"], .navbar, .top-bar {
+          position: relative !important;
+          top: 0 !important;
+          margin-top: 0 !important;
+          padding-top: calc(env(safe-area-inset-top, 24px) + 0.5rem) !important;
+        }
+        .container, .container-fluid, main, .main-content {
+          padding-top: calc(env(safe-area-inset-top, 24px) + 1rem) !important;
+        }
+      `;
+      if (!document.getElementById('status-bar-fix')) {
+        document.head.appendChild(style);
+      }
+    }
+
+    // Inject fix selepas page load (untuk portal content)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', injectStatusBarFix);
+    } else {
+      injectStatusBarFix();
+    }
+
+    // Re-inject selepas navigation (portal mungkin navigate secara dinamik)
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+      const url = location.href;
+      if (url !== lastUrl) {
+        lastUrl = url;
+        setTimeout(injectStatusBarFix, 100);
+      }
+    }).observe(document, { subtree: true, childList: true });
   </script>
 </body>
 </html>

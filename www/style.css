@@ -25,23 +25,34 @@ html, body {
   }
 }
 
-/* 📱 Safe area untuk notch & status bar */
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+/* 📱 Safe area untuk notch & status bar - Fix overlap */
+html {
+  padding-top: env(safe-area-inset-top, 24px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Header */
+body {
+  padding-top: max(env(safe-area-inset-top, 24px), 24px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  min-height: calc(100vh - env(safe-area-inset-top, 24px) - env(safe-area-inset-bottom, 0px));
+}
+
+/* Header - Fix untuk status bar overlap */
 header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 24px);
   background: var(--header-bg);
-  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  padding: calc(env(safe-area-inset-top, 24px) + 10px) 16px 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
   text-align: center;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   z-index: 10;
+  margin-top: 0;
 }
 
 /* Main content */

@@ -6,8 +6,6 @@
   "display": "standalone",
   "background_color": "#663399",
   "theme_color": "#663399",
-  "orientation": "portrait",
-  "scope": "/",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "ms-MY",
