@@ -39,13 +39,12 @@
                 padding-right: var(--safe-area-inset-right) !important;
             }*/
             /* Fix untuk body - prevent overlap dengan status bar */
-            body {
-                /* margin-top: 0 !important; */
+            /* body {
                 padding-top: var(--safe-area-inset-top) !important;
                 padding-bottom: var(--safe-area-inset-bottom) !important;
                 padding-left: var(--safe-area-inset-left) !important;
                 padding-right: var(--safe-area-inset-right) !important;
-            }
+            } */
            
             /* Fix untuk login page header container */
             .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
