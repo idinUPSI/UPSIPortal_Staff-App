@@ -20,8 +20,9 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html {
-      /* Prevent status bar overlap */
-      padding-top: env(safe-area-inset-top);
+      /* Jangan tambah padding-top di html - akan affect splash screen logo position */
+      /* Status bar overlap akan dihandle oleh Capacitor dan inject.js untuk portal content sahaja */
+      padding-top: 0;
       padding-bottom: env(safe-area-inset-bottom);
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
@@ -36,8 +37,9 @@
       justify-content: center;
       align-items: center;
       color: white;
-      /* Additional padding untuk status bar */
-      padding-top: max(env(safe-area-inset-top), 24px);
+      /* Jangan tambah padding-top di sini - akan push logo ke bawah */
+      /* Status bar akan dihandle oleh Capacitor dan inject.js */
+      padding-top: 0;
       padding-bottom: env(safe-area-inset-bottom);
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
@@ -151,11 +153,11 @@
 
     // Fix status bar overlap untuk portal content (selepas redirect)
     function injectStatusBarFix() {
-      // Inject CSS untuk fix status bar overlap dalam portal
+      // Inject CSS untuk fix status bar overlap dalam portal - lebih agresif
       const style = document.createElement('style');
       style.id = 'status-bar-fix';
       style.textContent = `
-        /* Fix status bar overlap untuk portal UPSI */
+        /* Fix status bar overlap untuk portal UPSI - agresif */
         html, body {
           padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
           margin-top: 0 !important;
@@ -164,13 +166,24 @@
           margin-top: 0 !important;
           padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
         }
-        header, .header, [role="banner"], .navbar, .top-bar {
+        /* Fix semua jenis header */
+        header, .header, [role="banner"], .navbar, .top-bar,
+        .site-header, .main-header, [class*="header"], [class*="Header"],
+        [id*="header"], [id*="Header"], nav[class*="navbar"] {
           position: relative !important;
           top: 0 !important;
           margin-top: 0 !important;
           padding-top: calc(env(safe-area-inset-top, 24px) + 0.5rem) !important;
+          z-index: 1000 !important;
         }
-        .container, .container-fluid, main, .main-content {
+        /* Fix fixed/sticky headers */
+        header[style*="fixed"], header[style*="sticky"],
+        .header[style*="fixed"], .header[style*="sticky"],
+        .navbar[style*="fixed"], .navbar[style*="sticky"] {
+          top: env(safe-area-inset-top, 24px) !important;
+          padding-top: 0.5rem !important;
+        }
+        .container, .container-fluid, main, .main-content, .content, #content {
           padding-top: calc(env(safe-area-inset-top, 24px) + 1rem) !important;
         }
       `;

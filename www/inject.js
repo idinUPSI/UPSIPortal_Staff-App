@@ -37,13 +37,24 @@
                 min-height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom)) !important;
             }
             
-            /* Fix untuk header elements */
-            .page-header, header, .header, [role="banner"] {
+            /* Fix untuk header elements - lebih agresif untuk portal UPSI */
+            .page-header, header, .header, [role="banner"], 
+            .navbar, .top-bar, .site-header, .main-header,
+            [class*="header"], [class*="Header"], [id*="header"], [id*="Header"],
+            nav[class*="navbar"], nav[class*="Navbar"] {
                 position: relative !important;
                 top: 0 !important;
                 margin-top: 0 !important;
-                padding-top: calc(1rem + var(--safe-area-inset-top)) !important;
+                padding-top: calc(0.5rem + var(--safe-area-inset-top)) !important;
                 z-index: 1000 !important;
+            }
+            
+            /* Fix untuk fixed/sticky headers */
+            header[style*="fixed"], header[style*="sticky"],
+            .header[style*="fixed"], .header[style*="sticky"],
+            .navbar[style*="fixed"], .navbar[style*="sticky"] {
+                top: var(--safe-area-inset-top) !important;
+                padding-top: 0.5rem !important;
             }
             
             /* Fix untuk container elements */

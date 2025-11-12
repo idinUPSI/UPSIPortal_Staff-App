@@ -249,7 +249,7 @@ public class MainActivity extends BridgeActivity {
                                 isShowingOfflinePage = false;
                                 
                                 // Inject CSS to prevent content overlap with status bar
-                                //injectStatusBarPaddingCSS(view);
+                                injectStatusBarFixCSS(view);
                                 
                                 // Force cache this page for offline use
                                 // This ensures the page is cached even if cache headers are not set
@@ -291,6 +291,35 @@ public class MainActivity extends BridgeActivity {
         }, 1000); // Increase delay to ensure WebView is fully ready
     }
 
+    // Inject CSS to fix status bar overlap for portal content
+    private void injectStatusBarFixCSS(WebView view) {
+        String js = "(function(){" +
+                "var existing = document.getElementById('android-status-bar-fix');" +
+                "if(!existing){" +
+                "  existing = document.createElement('style');" +
+                "  existing.id = 'android-status-bar-fix';" +
+                "  document.head.appendChild(existing);" +
+                "}" +
+                "existing.textContent = `" +
+                "html, body { padding-top: max(env(safe-area-inset-top, 24px), 24px) !important; margin-top: 0 !important; }" +
+                "header, .header, [role='banner'], .navbar, .top-bar, .site-header, .main-header," +
+                "[class*='header'], [class*='Header'], [id*='header'], [id*='Header'], nav[class*='navbar'] {" +
+                "  position: relative !important; top: 0 !important; margin-top: 0 !important;" +
+                "  padding-top: calc(env(safe-area-inset-top, 24px) + 0.5rem) !important; z-index: 1000 !important;" +
+                "}" +
+                "header[style*='fixed'], header[style*='sticky'], .header[style*='fixed'], .header[style*='sticky']," +
+                ".navbar[style*='fixed'], .navbar[style*='sticky'] {" +
+                "  top: env(safe-area-inset-top, 24px) !important; padding-top: 0.5rem !important;" +
+                "}" +
+                ".container, .container-fluid, main, .main-content, .content, #content {" +
+                "  padding-top: calc(env(safe-area-inset-top, 24px) + 1rem) !important;" +
+                "}" +
+                "`;" +
+                "console.log('[Android] Status bar fix CSS injected');" +
+                "})();";
+        view.evaluateJavascript(js, null);
+    }
+    
     private void loadOfflinePage(WebView view) {
         String offlineHtml = "<!DOCTYPE html>" +
             "<html><head><meta charset='UTF-8'>" +
