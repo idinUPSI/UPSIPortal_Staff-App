@@ -47,41 +47,20 @@
                 padding-right: var(--safe-area-inset-right) !important;
             }
             
-            /* Fix untuk header elements - adjust untuk elak terlalu tinggi */
-            .page-header, header, .header, [role="banner"], 
-            .navbar, .top-bar, .site-header, .main-header,
-            [class*="header"], [class*="Header"], [id*="header"], [id*="Header"],
-            nav[class*="navbar"], nav[class*="Navbar"] {
-                position: relative !important;
-                top: 0 !important;
-                margin-top: 0 !important;
-                /* Kurangkan padding untuk elak terlalu tinggi - hanya safe area sahaja */
-                padding-top: var(--safe-area-inset-top) !important;
-                min-height: auto !important;
+            /* Fix untuk login page header container */
+            .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
+                padding-top: 25px !important;
+            }
+            
+            /* Fix untuk dashboard page header dan content */
+            .page-header, .page-content {
+                padding-top: 30px !important;
                 height: auto !important;
-                z-index: 1000 !important;
             }
             
-            /* Fix untuk white header bar yang terlalu tinggi */
-            .navbar, .top-bar, [class*="navbar"], [class*="top-bar"] {
-                padding-top: calc(var(--safe-area-inset-top) * 0.5) !important;
-                padding-bottom: 0.5rem !important;
-            }
-            
-            /* Fix untuk fixed/sticky headers */
-            header[style*="fixed"], header[style*="sticky"],
-            .header[style*="fixed"], .header[style*="sticky"],
-            .navbar[style*="fixed"], .navbar[style*="sticky"] {
-                top: var(--safe-area-inset-top) !important;
-                padding-top: 0 !important;
-            }
-            
-            /* Fix untuk container elements - kurangkan padding */
-            .container, .container-fluid, main, .main-content, .content, #content {
-                padding-top: var(--safe-area-inset-top) !important;
-                padding-left: max(1rem, var(--safe-area-inset-left)) !important;
-                padding-right: max(1rem, var(--safe-area-inset-right)) !important;
-                margin-top: 0 !important;
+            /* Background color untuk dashboard page header */
+            .page-header {
+                background-color: #4D2677 !important;
             }
             
             /* Fix untuk fixed/sticky elements */
