@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "npx http-server www -p 8100 -c-1",
     "build": "npx cap sync android",
     "open:android": "npx cap open android"
   },

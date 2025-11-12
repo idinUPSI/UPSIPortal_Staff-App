@@ -47,9 +47,9 @@
             } */
            
             /* Fix untuk login page header container */
-            .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
+           /* .container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {
                 padding-top: 25px !important;
-            }
+            }*/
             
             /* Fix untuk dashboard page header dan content */
             .page-header, .page-content {
@@ -76,9 +76,9 @@
              } */
             
             /* Fix untuk iframe/webview content */
-            iframe, webview {
+          /*  iframe, webview {
                 margin-top: var(--safe-area-inset-top) !important;
-            }
+            }*/
         `;
         
         document.head.appendChild(style);

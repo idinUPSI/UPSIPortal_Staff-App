@@ -1,0 +1,33 @@
+{
+  "appId": "my.edu.upsi.portal.staff",
+  "appName": "MyUPSI Portal Staff (Dev)",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  
+  "server": {
+    "url": "http://YOUR_IP_HERE:8100",
+    "cleartext": true
+  },
+
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 500,
+      "launchAutoHide": true,
+      "backgroundColor": "#663399",
+      "androidSplashResourceName": "splash",
+      "showSpinner": true,
+      "spinnerColor": "#FFFFFF"
+    },
+    "StatusBar": {
+      "style": "light",
+      "backgroundColor": "#663399",
+      "overlaysWebView": false
+    }
+  },
+  
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
