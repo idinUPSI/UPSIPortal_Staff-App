@@ -12,6 +12,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -304,10 +305,38 @@ public class MainActivity extends BridgeActivity {
                 "#js-primary-nav {" +
                 "  top: 3rem !important;" +
                 "}" +
+                // Improve input usability for mobile keyboards
+                "input, textarea { -webkit-user-select: text !important; user-select: text !important; touch-action: manipulation !important; }" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +
                 "})();";
         view.evaluateJavascript(js, null);
+
+            // Attach a lightweight focus handler to ensure inputs stay visible and not obscured by overlays
+            String focusJs = "(function(){" +
+                "if(window.__upsiFocusHandlerAttached) return;" +
+                "document.addEventListener('focusin', function(e){" +
+                "  var t=e.target;" +
+                "  if(!t) return;" +
+                "  var tag=(t.tagName||'').toUpperCase();" +
+                "  if(tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable){" +
+                "    try { t.scrollIntoView({block:'center', behavior:'smooth'}); } catch(_) {}" +
+                "    // Temporarily relax pointer events on potential fixed overlays" +
+                "    var candidates = Array.from(document.querySelectorAll('*')).filter(function(el){" +
+                "      var st = getComputedStyle(el);" +
+                "      if((st.position==='fixed'||st.position==='absolute') && parseInt(st.zIndex||0) > 50 && el !== t && !el.contains(t)){" +
+                "         var r = el.getBoundingClientRect();" +
+                "         return r.width > 80 && r.height > 40;" +
+                "      }" +
+                "      return false;" +
+                "    });" +
+                "    candidates.forEach(function(el){ el.__oldPE = el.style.pointerEvents; el.style.pointerEvents='none'; });" +
+                "    setTimeout(function(){ candidates.forEach(function(el){ el.style.pointerEvents=el.__oldPE||''; }); }, 3000);" +
+                "  }" +
+                "}, true);" +
+                "window.__upsiFocusHandlerAttached = true;" +
+                "})();";
+            view.evaluateJavascript(focusJs, null);
     }
     
     private void loadOfflinePage(WebView view) {
@@ -544,8 +573,6 @@ public class MainActivity extends BridgeActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
                     }
-
-                    import android.view.MotionEvent;
                     // File access
                     settings.setAllowFileAccess(true);
                     settings.setAllowContentAccess(true);
@@ -554,29 +581,30 @@ public class MainActivity extends BridgeActivity {
                     settings.setUseWideViewPort(true);
                     settings.setLoadWithOverviewMode(true);
                     
-                                        // Enable JavaScript and DOM storage for better app-like behavior
-                                        settings.setJavaScriptEnabled(true);
+                    // Enable JavaScript and DOM storage for better app-like behavior
+                    settings.setJavaScriptEnabled(true);
                     webView.setFocusable(true);
                     webView.setFocusableInTouchMode(true);
                     webView.requestFocus();
+
+                    // Ensure WebView properly takes focus from touch (helps IME deliver keys reliably)
+                    webView.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View v, MotionEvent event) {
+                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                                if (!v.hasFocus()) {
+                                    v.requestFocus();
+                                    v.requestFocusFromTouch();
+                                }
+                            }
+                            return false; // let WebView handle normally
+                        }
+                    });
 
                     android.util.Log.i("MainActivity", "WebView settings optimized");
                 }
             } catch (Exception e) {
                 android.util.Log.e("MainActivity", "Error setting up WebView: " + e.getMessage());
-                                        // Ensure WebView properly takes focus from touch (helps IME deliver keys reliably)
-                                        webView.setOnTouchListener(new View.OnTouchListener() {
-                                            @Override
-                                            public boolean onTouch(View v, MotionEvent event) {
-                                                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                                    if (!v.hasFocus()) {
-                                                        v.requestFocus();
-                                                        v.requestFocusFromTouch();
-                                                    }
-                                                }
-                                                return false; // do not consume, let WebView handle normally
-                                            }
-                                        });
             }
         }, 1500);
     }
@@ -591,33 +619,16 @@ public class MainActivity extends BridgeActivity {
 
                     // If showing offline page, try to go back or exit
                     if (isShowingOfflinePage) {
-                                    // Improve input usability for mobile keyboards
-                                    "input, textarea { -webkit-user-select: text !important; user-select: text !important; touch-action: manipulation !important; }" +
                         if (webView.canGoBack()) {
                             isShowingOfflinePage = false;
                             webView.goBack();
                             return true;
                         } else {
-                            // Double press to exit
                             if (System.currentTimeMillis() - lastBackPressTime < BACK_PRESS_INTERVAL) {
-                                finishAffinity(); // Exit app
+                                finishAffinity();
                                 return true;
                             } else {
                                 lastBackPressTime = System.currentTimeMillis();
-                            // Attach a lightweight focus handler to ensure inputs stay visible and focused
-                            String focusJs = "(function(){" +
-                                    "if(window.__upsiFocusHandlerAttached) return;" +
-                                    "document.addEventListener('focusin', function(e){" +
-                                    "  var t=e.target;" +
-                                    "  if(!t) return;" +
-                                    "  var tag=(t.tagName||'').toUpperCase();" +
-                                    "  if(tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable){" +
-                                    "    setTimeout(function(){ try{ t.scrollIntoView({block:'center', behavior:'smooth'}); }catch(_){} }, 100);" +
-                                    "  }" +
-                                    "}, true);" +
-                                    "window.__upsiFocusHandlerAttached=true;" +
-                                    "})();";
-                            view.evaluateJavascript(focusJs, null);
                                 Toast.makeText(this, "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
                                 return true;
                             }
