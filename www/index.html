@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <!-- <link rel="stylesheet" href="style.css" /> -->
   <script src="inject.js"></script>
 
   <title>MyUPSI Portal Staff</title>
@@ -161,35 +161,7 @@
       const style = document.createElement('style');
       style.id = 'status-bar-fix';
       style.textContent = `
-        /* Fix status bar overlap untuk portal UPSI - agresif */
-        html, body {
-          padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
-          margin-top: 0 !important;
-        }
-        body > *:first-child {
-          margin-top: 0 !important;
-          padding-top: max(env(safe-area-inset-top, 24px), 24px) !important;
-        }
-        /* Fix semua jenis header - kurangkan padding untuk elak terlalu tinggi */
-        header, .header, [role="banner"], .navbar, .top-bar,
-        .site-header, .main-header, [class*="header"], [class*="Header"],
-        [id*="header"], [id*="Header"], nav[class*="navbar"] {
-          position: relative !important;
-          top: 0 !important;
-          margin-top: 0 !important;
-          padding-top: env(safe-area-inset-top, 24px) !important;
-          z-index: 1000 !important;
-        }
-        /* Fix fixed/sticky headers */
-        header[style*="fixed"], header[style*="sticky"],
-        .header[style*="fixed"], .header[style*="sticky"],
-        .navbar[style*="fixed"], .navbar[style*="sticky"] {
-          top: env(safe-area-inset-top, 24px) !important;
-          padding-top: 0 !important;
-        }
-        .container, .container-fluid, main, .main-content, .content, #content {
-          padding-top: env(safe-area-inset-top, 24px) !important;
-        }
+       
       `;
       if (!document.getElementById('status-bar-fix')) {
         document.head.appendChild(style);
