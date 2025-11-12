@@ -7,19 +7,30 @@
         // Check if already injected
         if (document.getElementById('upsi-mobile-css')) return;
         
+        // Jangan inject untuk splash screen (index.html)
+        // Hanya inject untuk portal content (unistaff.upsi.edu.my)
+        const currentUrl = window.location.href;
+        const isSplashScreen = currentUrl.includes('index.html') || 
+                              currentUrl.endsWith('/') || 
+                              !currentUrl.includes('unistaff.upsi.edu.my');
+        
+        if (isSplashScreen) {
+            // Untuk splash screen, jangan inject CSS yang akan affect logo position
+            return;
+        }
+        
         const style = document.createElement('style');
         style.id = 'upsi-mobile-css';
         style.textContent = `
-            /* PWA Safe Area Handling - Fix Status Bar Overlap */
+            /* PWA Safe Area Handling - Fix Status Bar Overlap (Portal Content Sahaja) */
             :root {
                 --safe-area-inset-top: env(safe-area-inset-top, 24px);
                 --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
                 --safe-area-inset-left: env(safe-area-inset-left, 0px);
                 --safe-area-inset-right: env(safe-area-inset-right, 0px);
-                --status-bar-height: 24px;
             }
             
-            /* Fix untuk html element */
+            /* Fix untuk html element - hanya untuk portal */
             html {
                 padding-top: var(--safe-area-inset-top) !important;
                 padding-bottom: var(--safe-area-inset-bottom) !important;
@@ -30,14 +41,13 @@
             /* Fix untuk body - prevent overlap dengan status bar */
             body {
                 margin-top: 0 !important;
-                padding-top: max(var(--safe-area-inset-top), var(--status-bar-height)) !important;
+                padding-top: var(--safe-area-inset-top) !important;
                 padding-bottom: var(--safe-area-inset-bottom) !important;
                 padding-left: var(--safe-area-inset-left) !important;
                 padding-right: var(--safe-area-inset-right) !important;
-                min-height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom)) !important;
             }
             
-            /* Fix untuk header elements - lebih agresif untuk portal UPSI */
+            /* Fix untuk header elements - kurangkan padding untuk elak terlalu tinggi */
             .page-header, header, .header, [role="banner"], 
             .navbar, .top-bar, .site-header, .main-header,
             [class*="header"], [class*="Header"], [id*="header"], [id*="Header"],
@@ -45,7 +55,7 @@
                 position: relative !important;
                 top: 0 !important;
                 margin-top: 0 !important;
-                padding-top: calc(0.5rem + var(--safe-area-inset-top)) !important;
+                padding-top: var(--safe-area-inset-top) !important;
                 z-index: 1000 !important;
             }
             
@@ -54,12 +64,12 @@
             .header[style*="fixed"], .header[style*="sticky"],
             .navbar[style*="fixed"], .navbar[style*="sticky"] {
                 top: var(--safe-area-inset-top) !important;
-                padding-top: 0.5rem !important;
+                padding-top: 0 !important;
             }
             
-            /* Fix untuk container elements */
+            /* Fix untuk container elements - kurangkan padding */
             .container, .container-fluid, main, .main-content, .content, #content {
-                padding-top: calc(1rem + var(--safe-area-inset-top)) !important;
+                padding-top: var(--safe-area-inset-top) !important;
                 padding-left: max(1rem, var(--safe-area-inset-left)) !important;
                 padding-right: max(1rem, var(--safe-area-inset-right)) !important;
                 margin-top: 0 !important;
@@ -77,7 +87,7 @@
         `;
         
         document.head.appendChild(style);
-        console.log('UPSI Mobile CSS injected - Status bar overlap fixed');
+        console.log('UPSI Mobile CSS injected - Status bar overlap fixed (Portal only)');
     }
     
     // Inject immediately if DOM is ready
