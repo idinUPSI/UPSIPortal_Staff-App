@@ -71,9 +71,9 @@
             }
             
             /* Fix untuk fixed/sticky elements */
-            [style*="position: fixed"], [style*="position: sticky"] {
+            /* [style*="position: fixed"], [style*="position: sticky"] {
                  top: var(--safe-area-inset-top) !important;
-             }
+             } */
             
             /* Fix untuk iframe/webview content */
             iframe, webview {
