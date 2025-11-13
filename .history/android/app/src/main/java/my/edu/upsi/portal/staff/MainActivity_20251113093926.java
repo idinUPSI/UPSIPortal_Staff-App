@@ -50,6 +50,9 @@ public class MainActivity extends BridgeActivity {
 
         // Fix status bar overlap
         setupStatusBar();
+        
+        // Setup native keyboard backspace fix
+        setupKeyboardBackspaceFix();
     }
 
         // Inject / update CSS to add padding for status bar and required header spacings
@@ -647,6 +650,15 @@ public class MainActivity extends BridgeActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+    
+    /**
+     * Enhanced keyboard backspace fix for Issue #62306
+     * Intercepts compositionend events and forces proper text deletion
+     */
+    private void setupKeyboardBackspaceFix() {
+        // This will be injected via JavaScript in injectStatusBarFixCSS
+        // See the backspaceFix enhancement in that method
     }
 }
 

@@ -50,6 +50,9 @@ public class MainActivity extends BridgeActivity {
 
         // Fix status bar overlap
         setupStatusBar();
+        
+        // Setup native keyboard backspace fix
+        setupKeyboardBackspaceFix();
     }
 
         // Inject / update CSS to add padding for status bar and required header spacings
