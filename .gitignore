@@ -10,6 +10,7 @@ android/.externalNativeBuild/
 android/.cxx/
 *.apk
 *.aab
+javac*.args
 
 # Node
 node_modules/
