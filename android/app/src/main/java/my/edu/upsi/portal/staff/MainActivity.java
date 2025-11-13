@@ -326,8 +326,8 @@ public class MainActivity extends BridgeActivity {
             view.evaluateJavascript(focusJs, null);
 
             // Ensure Backspace works in inputs even if site-level handlers block it
+            // AGGRESSIVE FIX: Always re-inject, manual deletion fallback, capture+bubble phases
             String backspaceFix = "(function(){" +
-                "if(window.__upsiBackspaceFixAttached) return;" +
                 "function isEditable(el){" +
                 "  if(!el) return false;" +
                 "  var tag = (el.tagName||'').toUpperCase();" +
@@ -336,20 +336,32 @@ public class MainActivity extends BridgeActivity {
                 "  if(el.isContentEditable) return true;" +
                 "  return false;" +
                 "}" +
-                "document.addEventListener('keydown', function(e){" +
-                "  var k = e.key || ''; var code = e.keyCode || 0;" +
-                "  if((k==='Backspace' || code===8) && isEditable(e.target)){" +
-                "    try{ e.stopImmediatePropagation(); /* don't preventDefault: let browser delete */ }catch(_){}" +
+                "function manualDelete(el){" +
+                "  try{" +
+                "    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'){" +
+                "      var start=el.selectionStart, end=el.selectionEnd;" +
+                "      if(start>0 && start===end){" +
+                "        el.value=el.value.substring(0,start-1)+el.value.substring(end);" +
+                "        el.selectionStart=el.selectionEnd=start-1;" +
+                "        el.dispatchEvent(new Event('input',{bubbles:true}));" +
+                "        return true;" +
+                "      }" +
+                "    }" +
+                "  }catch(_){}" +
+                "  return false;" +
+                "}" +
+                "var handler=function(e){" +
+                "  var k=e.key||''; var code=e.keyCode||e.which||0;" +
+                "  if((k==='Backspace'||code===8)&&isEditable(e.target)){" +
+                "    e.stopImmediatePropagation();" +
+                "    if(e.defaultPrevented){ e.preventDefault=function(){}; manualDelete(e.target); }" +
                 "  }" +
-                "}, true);" +
-                "// Fallback manual delete if needed via beforeinput (rare)" +
-                "document.addEventListener('beforeinput', function(e){" +
-                "  if(e.inputType==='deleteContentBackward' && isEditable(e.target)){" +
-                "    // allow default; but ensure propagation doesn't get blocked elsewhere" +
-                "    try{ e.stopPropagation(); }catch(_){}" +
-                "  }" +
-                "}, true);" +
-                "window.__upsiBackspaceFixAttached = true;" +
+                "};" +
+                "document.removeEventListener('keydown',handler,true);" +
+                "document.addEventListener('keydown',handler,true);" +
+                "document.removeEventListener('keydown',handler,false);" +
+                "document.addEventListener('keydown',handler,false);" +
+                "console.log('[UPSI] Backspace fix re-injected');" +
                 "})();";
             view.evaluateJavascript(backspaceFix, null);
     }
