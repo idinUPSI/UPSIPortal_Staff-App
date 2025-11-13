@@ -81,10 +81,11 @@
 </head>
 <body>
   <div class="logo" id="splash-logo">
-    <img src="assets/images/universiti-pendidikan-sultan-idris-small.png"
+    <!-- Use capacitor:// protocol for instant asset access on first launch -->
+    <img src="capacitor://localhost/_capacitor_file_/assets/images/universiti-pendidikan-sultan-idris-small.png"
          alt="UPSI Logo"
          style="width:100px;height:100px;"
-         onerror="this.style.display='none'; this.parentNode.innerHTML='UPSI';">
+         onerror="this.src='assets/images/universiti-pendidikan-sultan-idris-small.png'">
   </div>
   
   <!-- Debug button (hanya dalam development) -->
