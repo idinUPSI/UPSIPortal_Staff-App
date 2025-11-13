@@ -50,9 +50,6 @@ public class MainActivity extends BridgeActivity {
 
         // Fix status bar overlap
         setupStatusBar();
-        
-        // Setup native keyboard backspace fix
-        setupKeyboardBackspaceFix();
     }
 
         // Inject / update CSS to add padding for status bar and required header spacings
@@ -328,9 +325,9 @@ public class MainActivity extends BridgeActivity {
                 "})();";
             view.evaluateJavascript(focusJs, null);
 
-            // Enhanced Backspace fix with composition event handling for Issue #62306
-            // Fixes: Numbers delete fine, letters require multiple presses (composing text buffer issue)
+            // Ensure Backspace works in inputs even if site-level handlers block it
             String backspaceFix = "(function(){" +
+                "if(window.__upsiBackspaceFixAttached) return;" +
                 "function isEditable(el){" +
                 "  if(!el) return false;" +
                 "  var tag = (el.tagName||'').toUpperCase();" +
@@ -339,48 +336,20 @@ public class MainActivity extends BridgeActivity {
                 "  if(el.isContentEditable) return true;" +
                 "  return false;" +
                 "}" +
-                "function manualDelete(el){" +
-                "  try{" +
-                "    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'){" +
-                "      var start=el.selectionStart, end=el.selectionEnd;" +
-                "      if(start>0 && start===end){" +
-                "        el.value=el.value.substring(0,start-1)+el.value.substring(end);" +
-                "        el.selectionStart=el.selectionEnd=start-1;" +
-                "        var evt=new Event('input',{bubbles:true,cancelable:true});" +
-                "        el.dispatchEvent(evt);" +
-                "        return true;" +
-                "      }" +
-                "    }" +
-                "  }catch(_){}" +
-                "  return false;" +
-                "}" +
-                // Track composition state to handle composing text properly
-                "var composingElement = null;" +
-                "document.addEventListener('compositionstart', function(e){" +
-                "  if(isEditable(e.target)){ composingElement = e.target; }" +
-                "}, true);" +
-                "document.addEventListener('compositionend', function(e){" +
-                "  composingElement = null;" +
-                "}, true);" +
-                // Keydown handler with composition awareness
-                "var handler=function(e){" +
-                "  var k=e.key||''; var code=e.keyCode||e.which||0;" +
-                "  if((k==='Backspace'||code===8)&&isEditable(e.target)){" +
-                // Stop propagation immediately to prevent site handlers from blocking
-                "    e.stopImmediatePropagation();" +
-                // If composition is active OR defaultPrevented, force manual deletion
-                "    if(composingElement || e.defaultPrevented){" +
-                "      e.preventDefault=function(){};" +
-                "      manualDelete(e.target);" +
-                "    }" +
+                "document.addEventListener('keydown', function(e){" +
+                "  var k = e.key || ''; var code = e.keyCode || 0;" +
+                "  if((k==='Backspace' || code===8) && isEditable(e.target)){" +
+                "    try{ e.stopImmediatePropagation(); /* don't preventDefault: let browser delete */ }catch(_){}" +
                 "  }" +
-                "};" +
-                // Remove old listeners and add new ones (capture + bubble phases)
-                "document.removeEventListener('keydown',handler,true);" +
-                "document.addEventListener('keydown',handler,true);" +
-                "document.removeEventListener('keydown',handler,false);" +
-                "document.addEventListener('keydown',handler,false);" +
-                "console.log('[UPSI] Enhanced backspace fix with composition handling injected');" +
+                "}, true);" +
+                "// Fallback manual delete if needed via beforeinput (rare)" +
+                "document.addEventListener('beforeinput', function(e){" +
+                "  if(e.inputType==='deleteContentBackward' && isEditable(e.target)){" +
+                "    // allow default; but ensure propagation doesn't get blocked elsewhere" +
+                "    try{ e.stopPropagation(); }catch(_){}" +
+                "  }" +
+                "}, true);" +
+                "window.__upsiBackspaceFixAttached = true;" +
                 "})();";
             view.evaluateJavascript(backspaceFix, null);
     }
@@ -706,15 +675,6 @@ public class MainActivity extends BridgeActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
-    }
-    
-    /**
-     * Enhanced keyboard backspace fix for Issue #62306
-     * Intercepts compositionend events and forces proper text deletion
-     */
-    private void setupKeyboardBackspaceFix() {
-        // This will be injected via JavaScript in injectStatusBarFixCSS
-        // See the backspaceFix enhancement in that method
     }
 }
 

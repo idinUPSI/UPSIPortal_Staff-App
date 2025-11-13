@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Resource IDs for WebView tags -->
+    <item name="webview_tag_input_connection" type="id"/>
+</resources>

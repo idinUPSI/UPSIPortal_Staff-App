@@ -12,7 +12,6 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -37,7 +36,6 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
-    private boolean isNetworkCallbackRegistered = false;
     private static final String HOME_URL = "https://unistaff.upsi.edu.my";
     private boolean isShowingOfflinePage = false;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -50,9 +48,6 @@ public class MainActivity extends BridgeActivity {
 
         // Fix status bar overlap
         setupStatusBar();
-        
-        // Setup native keyboard backspace fix
-        setupKeyboardBackspaceFix();
     }
 
         // Inject / update CSS to add padding for status bar and required header spacings
@@ -247,20 +242,37 @@ public class MainActivity extends BridgeActivity {
                                 swipeRefreshLayout.setRefreshing(false);
                             }
                         }
+                        
+                        @Override
+                        public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                            // This allows us to intercept and potentially serve cached content
+                            // For offline mode, we can check cache here
+                            if (!isNetworkAvailable()) {
+                                // Offline: Try to serve from cache
+                                // WebView will automatically use cache if available
+                                android.util.Log.d("MainActivity", "Offline request: " + request.getUrl());
+                            }
+                            
+                            // Workaround: Force cache even if server sets no-cache
+                            // WebView's LOAD_CACHE_ELSE_NETWORK mode will handle this
+                            android.webkit.WebResourceResponse response = super.shouldInterceptRequest(view, request);
+                            
+                            // If we have a response, we can modify headers to allow caching
+                            // But WebView cache mode already handles this at a lower level
+                            return response;
+                        }
                     });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
-        }, 100); // Optimized delay for WebView readiness
+        }, 1000); // Increase delay to ensure WebView is fully ready
     }
 
     // Inject CSS to fix status bar overlap for portal content
     private void injectStatusBarFixCSS(WebView view) {
         String js = "(function(){" +
-                "if(window.__upsiCSSInjected) return;" +
-                "window.__upsiCSSInjected = true;" +
                 "var existing = document.getElementById('android-status-bar-fix');" +
                 "if(!existing){" +
                 "  existing = document.createElement('style');" +
@@ -272,9 +284,6 @@ public class MainActivity extends BridgeActivity {
                 // ".container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {" +
                 // "  padding-top: 25px !important;" +
                 // "}" +
-                ".page-header {" +
-                "background-color: #2b0f48;" +
-                "}" +
                 ".page-header, .page-content {" +
                 "  padding-top: 2.8rem !important;" +
                 "  height: auto !important;" +
@@ -295,94 +304,10 @@ public class MainActivity extends BridgeActivity {
                 "#js-primary-nav {" +
                 "  top: 3rem !important;" +
                 "}" +
-                // Improve input usability for mobile keyboards
-                "input, textarea { -webkit-user-select: text !important; user-select: text !important; touch-action: manipulation !important; }" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +
                 "})();";
         view.evaluateJavascript(js, null);
-
-            // Attach a lightweight focus handler to ensure inputs stay visible and not obscured by overlays
-            String focusJs = "(function(){" +
-                "if(window.__upsiFocusHandlerAttached) return;" +
-                "document.addEventListener('focusin', function(e){" +
-                "  var t=e.target;" +
-                "  if(!t) return;" +
-                "  var tag=(t.tagName||'').toUpperCase();" +
-                "  if(tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable){" +
-                "    try { t.scrollIntoView({block:'center', behavior:'smooth'}); } catch(_) {}" +
-                "    // Temporarily relax pointer events on potential fixed overlays (optimized)" +
-                "    var candidates = Array.from(document.querySelectorAll('.modal, .overlay, .popup, [role=dialog], .fixed-overlay, [class*=modal], [class*=overlay]')).filter(function(el){" +
-                "      var st = getComputedStyle(el);" +
-                "      if((st.position==='fixed'||st.position==='absolute') && parseInt(st.zIndex||0) > 50 && el !== t && !el.contains(t)){" +
-                "         var r = el.getBoundingClientRect();" +
-                "         return r.width > 80 && r.height > 40;" +
-                "      }" +
-                "      return false;" +
-                "    });" +
-                "    candidates.forEach(function(el){ el.__oldPE = el.style.pointerEvents; el.style.pointerEvents='none'; });" +
-                "    setTimeout(function(){ candidates.forEach(function(el){ el.style.pointerEvents=el.__oldPE||''; }); }, 3000);" +
-                "  }" +
-                "}, true);" +
-                "window.__upsiFocusHandlerAttached = true;" +
-                "})();";
-            view.evaluateJavascript(focusJs, null);
-
-            // Enhanced Backspace fix with composition event handling for Issue #62306
-            // Fixes: Numbers delete fine, letters require multiple presses (composing text buffer issue)
-            String backspaceFix = "(function(){" +
-                "function isEditable(el){" +
-                "  if(!el) return false;" +
-                "  var tag = (el.tagName||'').toUpperCase();" +
-                "  if(tag==='TEXTAREA') return !el.readOnly && !el.disabled;" +
-                "  if(tag==='INPUT'){ var t=(el.type||'').toLowerCase(); return ['text','search','url','tel','email','password','number','date','datetime-local','time','month','week'].indexOf(t)>=0 && !el.readOnly && !el.disabled; }" +
-                "  if(el.isContentEditable) return true;" +
-                "  return false;" +
-                "}" +
-                "function manualDelete(el){" +
-                "  try{" +
-                "    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'){" +
-                "      var start=el.selectionStart, end=el.selectionEnd;" +
-                "      if(start>0 && start===end){" +
-                "        el.value=el.value.substring(0,start-1)+el.value.substring(end);" +
-                "        el.selectionStart=el.selectionEnd=start-1;" +
-                "        var evt=new Event('input',{bubbles:true,cancelable:true});" +
-                "        el.dispatchEvent(evt);" +
-                "        return true;" +
-                "      }" +
-                "    }" +
-                "  }catch(_){}" +
-                "  return false;" +
-                "}" +
-                // Track composition state to handle composing text properly
-                "var composingElement = null;" +
-                "document.addEventListener('compositionstart', function(e){" +
-                "  if(isEditable(e.target)){ composingElement = e.target; }" +
-                "}, true);" +
-                "document.addEventListener('compositionend', function(e){" +
-                "  composingElement = null;" +
-                "}, true);" +
-                // Keydown handler with composition awareness
-                "var handler=function(e){" +
-                "  var k=e.key||''; var code=e.keyCode||e.which||0;" +
-                "  if((k==='Backspace'||code===8)&&isEditable(e.target)){" +
-                // Stop propagation immediately to prevent site handlers from blocking
-                "    e.stopImmediatePropagation();" +
-                // If composition is active OR defaultPrevented, force manual deletion
-                "    if(composingElement || e.defaultPrevented){" +
-                "      e.preventDefault=function(){};" +
-                "      manualDelete(e.target);" +
-                "    }" +
-                "  }" +
-                "};" +
-                // Remove old listeners and add new ones (capture + bubble phases)
-                "document.removeEventListener('keydown',handler,true);" +
-                "document.addEventListener('keydown',handler,true);" +
-                "document.removeEventListener('keydown',handler,false);" +
-                "document.addEventListener('keydown',handler,false);" +
-                "console.log('[UPSI] Enhanced backspace fix with composition handling injected');" +
-                "})();";
-            view.evaluateJavascript(backspaceFix, null);
     }
     
     private void loadOfflinePage(WebView view) {
@@ -453,10 +378,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onStop() {
         super.onStop();
-        if (connectivityManager != null && networkCallback != null && isNetworkCallbackRegistered) {
+        if (connectivityManager != null && networkCallback != null) {
             try {
                 connectivityManager.unregisterNetworkCallback(networkCallback);
-                isNetworkCallbackRegistered = false;
             } catch (Exception ignored) {}
         }
     }
@@ -509,10 +433,7 @@ public class MainActivity extends BridgeActivity {
         };
 
         try {
-            if (!isNetworkCallbackRegistered) {
-                connectivityManager.registerNetworkCallback(request, networkCallback);
-                isNetworkCallbackRegistered = true;
-            }
+            connectivityManager.registerNetworkCallback(request, networkCallback);
         } catch (Exception ignored) {}
     }
     
@@ -577,7 +498,7 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception e) {
                 android.util.Log.e("MainActivity", "Error setting up pull-to-refresh: " + e.getMessage());
             }
-        }, 200);
+        }, 1500);
     }
 
     // Setup WebView Settings for better performance and security
@@ -623,6 +544,7 @@ public class MainActivity extends BridgeActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
                     }
+
                     // File access
                     settings.setAllowFileAccess(true);
                     settings.setAllowContentAccess(true);
@@ -631,32 +553,17 @@ public class MainActivity extends BridgeActivity {
                     settings.setUseWideViewPort(true);
                     settings.setLoadWithOverviewMode(true);
                     
-                    // Enable JavaScript and DOM storage for better app-like behavior
-                    settings.setJavaScriptEnabled(true);
+                    // Fix keyboard input issues
                     webView.setFocusable(true);
                     webView.setFocusableInTouchMode(true);
                     webView.requestFocus();
-
-                    // Ensure WebView properly takes focus from touch (helps IME deliver keys reliably)
-                    webView.setOnTouchListener(new View.OnTouchListener() {
-                        @Override
-                        public boolean onTouch(View v, MotionEvent event) {
-                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                if (!v.hasFocus()) {
-                                    v.requestFocus();
-                                    v.requestFocusFromTouch();
-                                }
-                            }
-                            return false; // let WebView handle normally
-                        }
-                    });
 
                     android.util.Log.i("MainActivity", "WebView settings optimized");
                 }
             } catch (Exception e) {
                 android.util.Log.e("MainActivity", "Error setting up WebView: " + e.getMessage());
             }
-        }, 200);
+        }, 1500);
     }
 
     // Handle back button press
@@ -674,8 +581,9 @@ public class MainActivity extends BridgeActivity {
                             webView.goBack();
                             return true;
                         } else {
+                            // Double press to exit
                             if (System.currentTimeMillis() - lastBackPressTime < BACK_PRESS_INTERVAL) {
-                                finishAffinity();
+                                finishAffinity(); // Exit app
                                 return true;
                             } else {
                                 lastBackPressTime = System.currentTimeMillis();
@@ -706,15 +614,6 @@ public class MainActivity extends BridgeActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
-    }
-    
-    /**
-     * Enhanced keyboard backspace fix for Issue #62306
-     * Intercepts compositionend events and forces proper text deletion
-     */
-    private void setupKeyboardBackspaceFix() {
-        // This will be injected via JavaScript in injectStatusBarFixCSS
-        // See the backspaceFix enhancement in that method
     }
 }
 

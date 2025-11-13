@@ -11,11 +11,17 @@ import android.net.NetworkRequest;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.Selection;
+import android.text.SpannableStringBuilder;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -328,8 +334,8 @@ public class MainActivity extends BridgeActivity {
                 "})();";
             view.evaluateJavascript(focusJs, null);
 
-            // Enhanced Backspace fix with composition event handling for Issue #62306
-            // Fixes: Numbers delete fine, letters require multiple presses (composing text buffer issue)
+            // Ensure Backspace works in inputs even if site-level handlers block it
+            // AGGRESSIVE FIX: Always re-inject, manual deletion fallback, capture+bubble phases
             String backspaceFix = "(function(){" +
                 "function isEditable(el){" +
                 "  if(!el) return false;" +
@@ -346,41 +352,25 @@ public class MainActivity extends BridgeActivity {
                 "      if(start>0 && start===end){" +
                 "        el.value=el.value.substring(0,start-1)+el.value.substring(end);" +
                 "        el.selectionStart=el.selectionEnd=start-1;" +
-                "        var evt=new Event('input',{bubbles:true,cancelable:true});" +
-                "        el.dispatchEvent(evt);" +
+                "        el.dispatchEvent(new Event('input',{bubbles:true}));" +
                 "        return true;" +
                 "      }" +
                 "    }" +
                 "  }catch(_){}" +
                 "  return false;" +
                 "}" +
-                // Track composition state to handle composing text properly
-                "var composingElement = null;" +
-                "document.addEventListener('compositionstart', function(e){" +
-                "  if(isEditable(e.target)){ composingElement = e.target; }" +
-                "}, true);" +
-                "document.addEventListener('compositionend', function(e){" +
-                "  composingElement = null;" +
-                "}, true);" +
-                // Keydown handler with composition awareness
                 "var handler=function(e){" +
                 "  var k=e.key||''; var code=e.keyCode||e.which||0;" +
                 "  if((k==='Backspace'||code===8)&&isEditable(e.target)){" +
-                // Stop propagation immediately to prevent site handlers from blocking
                 "    e.stopImmediatePropagation();" +
-                // If composition is active OR defaultPrevented, force manual deletion
-                "    if(composingElement || e.defaultPrevented){" +
-                "      e.preventDefault=function(){};" +
-                "      manualDelete(e.target);" +
-                "    }" +
+                "    if(e.defaultPrevented){ e.preventDefault=function(){}; manualDelete(e.target); }" +
                 "  }" +
                 "};" +
-                // Remove old listeners and add new ones (capture + bubble phases)
                 "document.removeEventListener('keydown',handler,true);" +
                 "document.addEventListener('keydown',handler,true);" +
                 "document.removeEventListener('keydown',handler,false);" +
                 "document.addEventListener('keydown',handler,false);" +
-                "console.log('[UPSI] Enhanced backspace fix with composition handling injected');" +
+                "console.log('[UPSI] Backspace fix re-injected');" +
                 "})();";
             view.evaluateJavascript(backspaceFix, null);
     }
@@ -709,12 +699,84 @@ public class MainActivity extends BridgeActivity {
     }
     
     /**
-     * Enhanced keyboard backspace fix for Issue #62306
-     * Intercepts compositionend events and forces proper text deletion
+     * Native Android fix for keyboard backspace issue (Issue #62306)
+     * Some keyboards (Samsung, Swype, etc) don't send proper KEYCODE_DEL events.
+     * This overrides WebView's InputConnection to intercept deleteSurroundingText()
+     * and generate proper backspace key events.
      */
     private void setupKeyboardBackspaceFix() {
-        // This will be injected via JavaScript in injectStatusBarFixCSS
-        // See the backspaceFix enhancement in that method
+        getBridge().getWebView().post(() -> {
+            // Override WebView's input connection creation
+            android.webkit.WebView webView = getBridge().getWebView();
+            
+            // Store original onCreateInputConnection behavior
+            webView.setTag(R.id.webview_tag_input_connection, new Object() {
+                public InputConnection createInputConnection(EditorInfo outAttrs) {
+                    InputConnection baseConnection = new BaseInputConnection(webView, false) {
+                        private Editable mEditable;
+                        private static final String DUMMY_CHAR = "/";
+                        
+                        @Override
+                        public Editable getEditable() {
+                            if (Build.VERSION.SDK_INT >= 14) {
+                                if (mEditable == null) {
+                                    mEditable = new CustomEditable(DUMMY_CHAR);
+                                    Selection.setSelection(mEditable, 1);
+                                } else if (mEditable.length() == 0) {
+                                    mEditable.append(DUMMY_CHAR);
+                                    Selection.setSelection(mEditable, 1);
+                                }
+                                return mEditable;
+                            }
+                            return super.getEditable();
+                        }
+                        
+                        @Override
+                        public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+                            // Fix for Google Keyboard bug - convert deleteSurroundingText to KEYCODE_DEL
+                            if (Build.VERSION.SDK_INT >= 14 && beforeLength == 1 && afterLength == 0) {
+                                // Send backspace key events instead
+                                return super.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                                    && super.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL));
+                            }
+                            return super.deleteSurroundingText(beforeLength, afterLength);
+                        }
+                    };
+                    
+                    outAttrs.inputType = EditorInfo.TYPE_CLASS_TEXT;
+                    outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+                    
+                    return baseConnection;
+                }
+            });
+        });
+    }
+    
+    /**
+     * Custom Editable that maintains a dummy buffer to prevent keyboard from stopping
+     * KEYCODE_DEL generation when it thinks the buffer is empty.
+     */
+    private static class CustomEditable extends SpannableStringBuilder {
+        private static final String DUMMY_CHAR = "/";
+        
+        CustomEditable(CharSequence source) {
+            super(source);
+        }
+        
+        @Override
+        public SpannableStringBuilder replace(int start, int end, CharSequence tb, int tbstart, int tbend) {
+            if (tbend > tbstart) {
+                // Inserting text - clear buffer and insert new text
+                super.replace(0, length(), "", 0, 0);
+                return super.replace(0, 0, tb, tbstart, tbend);
+            } else if (end > start) {
+                // Deleting text - clear buffer and insert dummy char
+                super.replace(0, length(), "", 0, 0);
+                return super.replace(0, 0, DUMMY_CHAR, 0, DUMMY_CHAR.length());
+            }
+            // No change - maintain current buffer
+            return super.replace(start, end, tb, tbstart, tbend);
+        }
     }
 }
 

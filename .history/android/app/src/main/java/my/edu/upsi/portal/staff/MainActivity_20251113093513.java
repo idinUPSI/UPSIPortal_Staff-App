@@ -11,11 +11,17 @@ import android.net.NetworkRequest;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.Selection;
+import android.text.SpannableStringBuilder;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -328,8 +334,8 @@ public class MainActivity extends BridgeActivity {
                 "})();";
             view.evaluateJavascript(focusJs, null);
 
-            // Enhanced Backspace fix with composition event handling for Issue #62306
-            // Fixes: Numbers delete fine, letters require multiple presses (composing text buffer issue)
+            // Ensure Backspace works in inputs even if site-level handlers block it
+            // AGGRESSIVE FIX: Always re-inject, manual deletion fallback, capture+bubble phases
             String backspaceFix = "(function(){" +
                 "function isEditable(el){" +
                 "  if(!el) return false;" +
@@ -346,41 +352,25 @@ public class MainActivity extends BridgeActivity {
                 "      if(start>0 && start===end){" +
                 "        el.value=el.value.substring(0,start-1)+el.value.substring(end);" +
                 "        el.selectionStart=el.selectionEnd=start-1;" +
-                "        var evt=new Event('input',{bubbles:true,cancelable:true});" +
-                "        el.dispatchEvent(evt);" +
+                "        el.dispatchEvent(new Event('input',{bubbles:true}));" +
                 "        return true;" +
                 "      }" +
                 "    }" +
                 "  }catch(_){}" +
                 "  return false;" +
                 "}" +
-                // Track composition state to handle composing text properly
-                "var composingElement = null;" +
-                "document.addEventListener('compositionstart', function(e){" +
-                "  if(isEditable(e.target)){ composingElement = e.target; }" +
-                "}, true);" +
-                "document.addEventListener('compositionend', function(e){" +
-                "  composingElement = null;" +
-                "}, true);" +
-                // Keydown handler with composition awareness
                 "var handler=function(e){" +
                 "  var k=e.key||''; var code=e.keyCode||e.which||0;" +
                 "  if((k==='Backspace'||code===8)&&isEditable(e.target)){" +
-                // Stop propagation immediately to prevent site handlers from blocking
                 "    e.stopImmediatePropagation();" +
-                // If composition is active OR defaultPrevented, force manual deletion
-                "    if(composingElement || e.defaultPrevented){" +
-                "      e.preventDefault=function(){};" +
-                "      manualDelete(e.target);" +
-                "    }" +
+                "    if(e.defaultPrevented){ e.preventDefault=function(){}; manualDelete(e.target); }" +
                 "  }" +
                 "};" +
-                // Remove old listeners and add new ones (capture + bubble phases)
                 "document.removeEventListener('keydown',handler,true);" +
                 "document.addEventListener('keydown',handler,true);" +
                 "document.removeEventListener('keydown',handler,false);" +
                 "document.addEventListener('keydown',handler,false);" +
-                "console.log('[UPSI] Enhanced backspace fix with composition handling injected');" +
+                "console.log('[UPSI] Backspace fix re-injected');" +
                 "})();";
             view.evaluateJavascript(backspaceFix, null);
     }
