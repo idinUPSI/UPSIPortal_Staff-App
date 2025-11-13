@@ -37,6 +37,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
+    private boolean isNetworkCallbackRegistered = false;
     private static final String HOME_URL = "https://unistaff.upsi.edu.my";
     private boolean isShowingOfflinePage = false;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -243,37 +244,20 @@ public class MainActivity extends BridgeActivity {
                                 swipeRefreshLayout.setRefreshing(false);
                             }
                         }
-                        
-                        @Override
-                        public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                            // This allows us to intercept and potentially serve cached content
-                            // For offline mode, we can check cache here
-                            if (!isNetworkAvailable()) {
-                                // Offline: Try to serve from cache
-                                // WebView will automatically use cache if available
-                                android.util.Log.d("MainActivity", "Offline request: " + request.getUrl());
-                            }
-                            
-                            // Workaround: Force cache even if server sets no-cache
-                            // WebView's LOAD_CACHE_ELSE_NETWORK mode will handle this
-                            android.webkit.WebResourceResponse response = super.shouldInterceptRequest(view, request);
-                            
-                            // If we have a response, we can modify headers to allow caching
-                            // But WebView cache mode already handles this at a lower level
-                            return response;
-                        }
                     });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
-        }, 1000); // Increase delay to ensure WebView is fully ready
+        }, 100); // Optimized delay for WebView readiness
     }
 
     // Inject CSS to fix status bar overlap for portal content
     private void injectStatusBarFixCSS(WebView view) {
         String js = "(function(){" +
+                "if(window.__upsiCSSInjected) return;" +
+                "window.__upsiCSSInjected = true;" +
                 "var existing = document.getElementById('android-status-bar-fix');" +
                 "if(!existing){" +
                 "  existing = document.createElement('style');" +
@@ -285,6 +269,9 @@ public class MainActivity extends BridgeActivity {
                 // ".container-fluid.container-xl.position-relative.d-flex.align-items-center.justify-content-between {" +
                 // "  padding-top: 25px !important;" +
                 // "}" +
+                ".page-header {" +
+                "background-color: #2b0f48;" +
+                "}" +
                 ".page-header, .page-content {" +
                 "  padding-top: 2.8rem !important;" +
                 "  height: auto !important;" +
@@ -321,8 +308,8 @@ public class MainActivity extends BridgeActivity {
                 "  var tag=(t.tagName||'').toUpperCase();" +
                 "  if(tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable){" +
                 "    try { t.scrollIntoView({block:'center', behavior:'smooth'}); } catch(_) {}" +
-                "    // Temporarily relax pointer events on potential fixed overlays" +
-                "    var candidates = Array.from(document.querySelectorAll('*')).filter(function(el){" +
+                "    // Temporarily relax pointer events on potential fixed overlays (optimized)" +
+                "    var candidates = Array.from(document.querySelectorAll('.modal, .overlay, .popup, [role=dialog], .fixed-overlay, [class*=modal], [class*=overlay]')).filter(function(el){" +
                 "      var st = getComputedStyle(el);" +
                 "      if((st.position==='fixed'||st.position==='absolute') && parseInt(st.zIndex||0) > 50 && el !== t && !el.contains(t)){" +
                 "         var r = el.getBoundingClientRect();" +
@@ -435,9 +422,10 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onStop() {
         super.onStop();
-        if (connectivityManager != null && networkCallback != null) {
+        if (connectivityManager != null && networkCallback != null && isNetworkCallbackRegistered) {
             try {
                 connectivityManager.unregisterNetworkCallback(networkCallback);
+                isNetworkCallbackRegistered = false;
             } catch (Exception ignored) {}
         }
     }
@@ -490,7 +478,10 @@ public class MainActivity extends BridgeActivity {
         };
 
         try {
-            connectivityManager.registerNetworkCallback(request, networkCallback);
+            if (!isNetworkCallbackRegistered) {
+                connectivityManager.registerNetworkCallback(request, networkCallback);
+                isNetworkCallbackRegistered = true;
+            }
         } catch (Exception ignored) {}
     }
     
@@ -555,7 +546,7 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception e) {
                 android.util.Log.e("MainActivity", "Error setting up pull-to-refresh: " + e.getMessage());
             }
-        }, 1500);
+        }, 200);
     }
 
     // Setup WebView Settings for better performance and security
@@ -634,7 +625,7 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception e) {
                 android.util.Log.e("MainActivity", "Error setting up WebView: " + e.getMessage());
             }
-        }, 1500);
+        }, 200);
     }
 
     // Handle back button press
