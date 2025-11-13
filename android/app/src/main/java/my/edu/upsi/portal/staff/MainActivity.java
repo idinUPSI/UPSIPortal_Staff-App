@@ -293,37 +293,26 @@ public class MainActivity extends BridgeActivity {
                 "  top: 3rem !important;" +
                 "}" +
                 // Improve input usability for mobile keyboards
-                "input, textarea { -webkit-user-select: text !important; user-select: text !important; touch-action: manipulation !important; }" +
+                "input, textarea { -webkit-user-select: text !important; user-select: text !important; }" +
                 "`;" +
                 "console.log('[Android] Status bar fix CSS injected');" +
                 "})();";
         view.evaluateJavascript(js, null);
-
-            // Attach a lightweight focus handler to ensure inputs stay visible and not obscured by overlays
-            String focusJs = "(function(){" +
+        
+        // Simplified focus handler - just ensure inputs are visible when focused
+        String focusJs = "(function(){" +
                 "if(window.__upsiFocusHandlerAttached) return;" +
                 "document.addEventListener('focusin', function(e){" +
                 "  var t=e.target;" +
                 "  if(!t) return;" +
                 "  var tag=(t.tagName||'').toUpperCase();" +
                 "  if(tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable){" +
-                "    try { t.scrollIntoView({block:'center', behavior:'smooth'}); } catch(_) {}" +
-                "    // Temporarily relax pointer events on potential fixed overlays (optimized)" +
-                "    var candidates = Array.from(document.querySelectorAll('.modal, .overlay, .popup, [role=dialog], .fixed-overlay, [class*=modal], [class*=overlay]')).filter(function(el){" +
-                "      var st = getComputedStyle(el);" +
-                "      if((st.position==='fixed'||st.position==='absolute') && parseInt(st.zIndex||0) > 50 && el !== t && !el.contains(t)){" +
-                "         var r = el.getBoundingClientRect();" +
-                "         return r.width > 80 && r.height > 40;" +
-                "      }" +
-                "      return false;" +
-                "    });" +
-                "    candidates.forEach(function(el){ el.__oldPE = el.style.pointerEvents; el.style.pointerEvents='none'; });" +
-                "    setTimeout(function(){ candidates.forEach(function(el){ el.style.pointerEvents=el.__oldPE||''; }); }, 3000);" +
+                "    setTimeout(function(){ try { t.scrollIntoView({block:'center', behavior:'smooth'}); } catch(_) {} }, 300);" +
                 "  }" +
                 "}, true);" +
                 "window.__upsiFocusHandlerAttached = true;" +
                 "})();";
-            view.evaluateJavascript(focusJs, null);
+        view.evaluateJavascript(focusJs, null);
     }
     
     private void loadOfflinePage(WebView view) {
@@ -576,21 +565,13 @@ public class MainActivity extends BridgeActivity {
                     settings.setJavaScriptEnabled(true);
                     webView.setFocusable(true);
                     webView.setFocusableInTouchMode(true);
-                    webView.requestFocus();
-
-                    // Ensure WebView properly takes focus from touch (helps IME deliver keys reliably)
-                    webView.setOnTouchListener(new View.OnTouchListener() {
-                        @Override
-                        public boolean onTouch(View v, MotionEvent event) {
-                            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                if (!v.hasFocus()) {
-                                    v.requestFocus();
-                                    v.requestFocusFromTouch();
-                                }
-                            }
-                            return false; // let WebView handle normally
-                        }
-                    });
+                    
+                    // Ensure proper keyboard handling
+                    webView.setHapticFeedbackEnabled(true);
+                    webView.setScrollbarFadingEnabled(true);
+                    
+                    // Enable text selection in input fields
+                    webView.setLongClickable(true);
 
                     android.util.Log.i("MainActivity", "WebView settings optimized");
                 }
