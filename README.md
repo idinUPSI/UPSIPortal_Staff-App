@@ -10,6 +10,7 @@ Aplikasi Android rasmi yang membungkus portal staf UPSI (https://unistaff.upsi.e
 - ✅ Push notifications ready
 - ✅ Smooth navigation & loading states
 - ✅ Responsive design untuk semua screen sizes
+- ✅ Production-ready error handling (no technical errors shown to users)
 
 ## 📱 Platform
 
@@ -118,6 +119,14 @@ Edit `www/index.html`:
 - Warna tema (kini `#663399`)
 - Teks splash screen
 - Tajuk header
+
+### Debug Mode
+Untuk debugging, set `DEBUG_MODE = true` dalam fail-fail berikut:
+- `www/index.html` - untuk log Service Worker
+- `www/inject.js` - untuk log CSS injection
+- `www/service-worker.js` - untuk log cache operations
+
+**PENTING**: Pastikan `DEBUG_MODE = false` untuk production build supaya error codes dan technical details tidak ditunjukkan kepada pengguna.
 
 ## 🔔 Notifikasi (Firebase Cloud Messaging)
 
