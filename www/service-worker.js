@@ -1,6 +1,21 @@
 // Service Worker for MyUPSI Portal Staff
 // Version-based caching with network-first strategy
 
+// Debug mode - set to false in production to disable console logs
+const DEBUG_MODE = false;
+
+function debugLog(...args) {
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
+}
+
+function debugError(...args) {
+    if (DEBUG_MODE) {
+        console.error(...args);
+    }
+}
+
 const CACHE_VERSION = 'v1.0.0';
 const CACHE_NAME = `myupsi-portal-${CACHE_VERSION}`;
 const OFFLINE_CACHE = `myupsi-offline-${CACHE_VERSION}`;
@@ -16,26 +31,26 @@ const OFFLINE_ASSETS = [
 
 // Install event - cache offline assets
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Installing...');
+  debugLog('[ServiceWorker] Installing...');
   event.waitUntil(
     caches.open(OFFLINE_CACHE)
       .then((cache) => {
-        console.log('[ServiceWorker] Caching offline assets');
+        debugLog('[ServiceWorker] Caching offline assets');
         return cache.addAll(OFFLINE_ASSETS);
       })
       .then(() => {
-        console.log('[ServiceWorker] Skip waiting');
+        debugLog('[ServiceWorker] Skip waiting');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[ServiceWorker] Install failed:', error);
+        debugError('[ServiceWorker] Install failed:', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activating...');
+  debugLog('[ServiceWorker] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -47,13 +62,13 @@ self.addEventListener('activate', (event) => {
                    cacheName !== OFFLINE_CACHE;
           })
           .map((cacheName) => {
-            console.log('[ServiceWorker] Deleting old cache:', cacheName);
+            debugLog('[ServiceWorker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           })
       );
     })
     .then(() => {
-      console.log('[ServiceWorker] Claiming clients');
+      debugLog('[ServiceWorker] Claiming clients');
       return self.clients.claim();
     })
   );
@@ -88,7 +103,7 @@ self.addEventListener('fetch', (event) => {
         if (response.status === 200 && response.type === 'basic') {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseToCache).catch(err => {
-              console.log('[ServiceWorker] Cache put failed (may be cross-origin):', request.url);
+              debugLog('[ServiceWorker] Cache put failed (may be cross-origin):', request.url);
             });
           });
         }
@@ -96,13 +111,13 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch((error) => {
-        console.log('[ServiceWorker] Fetch failed, trying cache:', request.url);
+        debugLog('[ServiceWorker] Fetch failed, trying cache:', request.url);
 
         // Try to get from cache
         return caches.match(request)
           .then((cachedResponse) => {
             if (cachedResponse) {
-              console.log('[ServiceWorker] Serving from cache:', request.url);
+              debugLog('[ServiceWorker] Serving from cache:', request.url);
               return cachedResponse;
             }
 
@@ -142,7 +157,7 @@ self.addEventListener('message', (event) => {
 
 // Handle push notifications
 self.addEventListener('push', (event) => {
-  console.log('[ServiceWorker] Push received:', event);
+  debugLog('[ServiceWorker] Push received:', event);
 
   const options = {
     body: event.data ? event.data.text() : 'Anda mempunyai notifikasi baru',
@@ -160,7 +175,7 @@ self.addEventListener('push', (event) => {
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('[ServiceWorker] Notification clicked:', event);
+  debugLog('[ServiceWorker] Notification clicked:', event);
   event.notification.close();
 
   event.waitUntil(
@@ -168,4 +183,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-console.log('[ServiceWorker] Loaded');
+debugLog('[ServiceWorker] Loaded');

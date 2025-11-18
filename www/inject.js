@@ -3,6 +3,15 @@
 (function() {
     'use strict';
     
+    // Debug mode - set to false in production to disable console logs
+    const DEBUG_MODE = false;
+    
+    function debugLog(...args) {
+        if (DEBUG_MODE) {
+            console.log(...args);
+        }
+    }
+    
     function injectMobileCSS() {
         // Check if already injected
         if (document.getElementById('upsi-mobile-css')) return;
@@ -115,7 +124,7 @@
         `;
         
         document.head.appendChild(style);
-        console.log('UPSI Mobile CSS injected - Status bar overlap fixed (Portal only)');
+        debugLog('UPSI Mobile CSS injected - Status bar overlap fixed (Portal only)');
     }
     
     // Inject immediately if DOM is ready
@@ -149,7 +158,7 @@
                 /\/\* ===== HIDE PANELS - SHOW LOGIN ONLY ===== \*\/[\s\S]*?\/\* PWA Safe Area Handling/,
                 '/* PWA Safe Area Handling'
             );
-            console.log('All panels shown after login');
+            debugLog('All panels shown after login');
         }
     }
     
