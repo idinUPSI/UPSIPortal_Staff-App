@@ -247,8 +247,10 @@ public class MainActivity extends BridgeActivity {
                     });
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                // Log error for debugging only
+                android.util.Log.e("MainActivity", "Setup error", e);
+                // Show user-friendly message instead of technical error
+                Toast.makeText(this, "Ralat semasa memuatkan aplikasi. Sila cuba lagi.", Toast.LENGTH_SHORT).show();
             }
         }, 100); // Optimized delay for WebView readiness
     }

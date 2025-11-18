@@ -102,6 +102,15 @@
   <div class="status" id="status">Memuatkan...</div>
 
   <script>
+    // Debug mode - set to false in production to disable console logs
+    const DEBUG_MODE = false;
+    
+    function debugLog(...args) {
+      if (DEBUG_MODE) {
+        console.log(...args);
+      }
+    }
+    
     const PORTAL_URL = 'https://unistaff.upsi.edu.my';
     let redirectAttempted = false;
 
@@ -146,8 +155,8 @@
     // Daftar service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker didaftarkan'))
-        .catch(err => console.log('SW gagal:', err));
+        .then(() => debugLog('Service Worker didaftarkan'))
+        .catch(err => debugLog('SW gagal:', err));
     }
 
     // Tema dinamik ikut mode sistem
