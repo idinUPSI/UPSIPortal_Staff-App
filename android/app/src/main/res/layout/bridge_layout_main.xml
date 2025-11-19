@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Custom Capacitor bridge layout that uses CustomCapacitorWebView
+    instead of the default CapacitorWebView.
+    
+    This layout is compatible with Capacitor 7's BridgeActivity and includes:
+    - CustomCapacitorWebView with keyboard input fixes (backspace, enter, etc.)
+    - Proper ID (webview) that Capacitor expects
+    - SwipeRefreshLayout for pull-to-refresh functionality
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <my.edu.upsi.portal.staff.CustomCapacitorWebView
+            android:id="@+id/webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
