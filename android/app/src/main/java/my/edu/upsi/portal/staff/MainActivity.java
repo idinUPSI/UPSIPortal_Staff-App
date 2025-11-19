@@ -45,7 +45,11 @@ public class MainActivity extends BridgeActivity {
     private static final int BACK_PRESS_INTERVAL = 2000; // 2 seconds
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        // Set custom layout with CustomCapacitorWebView BEFORE calling super.onCreate()
+        // This tells Capacitor to use our keyboard-fixed WebView implementation
+        setContentView(R.layout.bridge_layout_main);
+        
         super.onCreate(savedInstanceState);
 
         // Fix status bar overlap
