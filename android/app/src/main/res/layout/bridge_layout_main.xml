@@ -4,7 +4,7 @@
     instead of the default CapacitorWebView.
     
     This layout is compatible with Capacitor 7's BridgeActivity and includes:
-    - CustomCapacitorWebView with keyboard input fixes (backspace, enter, etc.)
+    - CustomCapacitorWebView that uses native Android keyboard handling
     - Proper ID (webview) that Capacitor expects
     - SwipeRefreshLayout for pull-to-refresh functionality
 -->
